@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>The Cipher Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep: #0B0E24; --panel: #1B2050; --panel-2: #242B66;
+    --zero: #4CD6FF; --zero-dim: #2E5F82; --one: #FFB238; --one-dim: #8A6631;
+    --text: #F5F7FF; --text-dim: #A9AFDC; --accent: #7C6FFF; --accent-bright: #9C90FF;
+    --good: #4CFFC0; --limit: #FF5C7A; --star: #FFE066; --pink: #FF6FA5;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 34px),
+      radial-gradient(circle at 20% 8%, rgba(124,111,255,0.20), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(76,214,255,0.14), transparent 40%),
+      var(--bg-deep);
+    color: var(--text); font-family: 'Nunito', sans-serif; min-height: 100vh;
+    display:flex; justify-content:center; padding: 18px 14px 50px;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .stars{ position: fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .stars span{ position:absolute; width:3px; height:3px; background:var(--star); border-radius:50%; opacity:.5; animation: twinkle 3.5s ease-in-out infinite; }
+  @keyframes twinkle{ 0%,100%{opacity:.15} 50%{opacity:.75} }
+  .app{ width:100%; max-width: 520px; position:relative; z-index:1; }
+
+  header{ text-align:center; margin: 6px 0 14px; }
+  .hero-icon{ display:flex; justify-content:center; align-items:center; gap:22px; margin-bottom: 10px; position:relative; height: 22px; }
+  .hero-icon::before{ content:""; position:absolute; left:calc(50% - 22px); right:calc(50% - 22px); top:50%; height:2px; background: linear-gradient(90deg, var(--zero), var(--one)); opacity:.6; }
+  .hero-orb{ width:14px;height:14px;border-radius:50%; background:var(--zero); box-shadow:0 0 16px var(--zero); animation: orbpulse 2.2s ease-in-out infinite; position:relative; z-index:1; }
+  .hero-orb.b{ background:var(--one); box-shadow:0 0 16px var(--one); animation-delay:.5s; }
+  @keyframes orbpulse{ 0%,100%{ transform:scale(1); opacity:.75;} 50%{ transform:scale(1.5); opacity:1; } }
+  header h1{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size: 2.1rem; margin: 0 0 6px;
+    background: linear-gradient(90deg, var(--zero), var(--accent-bright) 55%, var(--one));
+    -webkit-background-clip: text; background-clip:text; color: transparent;
+    filter: drop-shadow(0 0 22px rgba(124,111,255,0.4)); }
+  header p{ margin:0; color: var(--text-dim); font-size: 0.92rem; line-height:1.4; }
+  header .fine{ font-size:0.68rem; color: var(--text-dim); opacity:.65; margin-top:6px; }
+
+  .stepper{ display:flex; gap:6px; margin-bottom: 16px; background: var(--panel); border-radius: 14px; padding: 8px; }
+  .step-pill{ flex:1; text-align:center; padding: 8px 2px; border-radius:10px; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.68rem; color: var(--text-dim); cursor:default; }
+  .step-pill .dot{ display:block; width:9px;height:9px; border-radius:50%; background: rgba(255,255,255,0.15); margin: 0 auto 4px; }
+  .step-pill.current{ color:#fff; } .step-pill.current .dot{ background: var(--accent-bright); box-shadow: 0 0 10px var(--accent-bright); }
+  .step-pill.done{ color: var(--good); cursor:pointer; } .step-pill.done .dot{ background: var(--good); box-shadow: 0 0 8px var(--good); }
+  .step-pill.locked{ opacity:.35; }
+
+  section.screen{ display:none; } section.screen.active{ display:block; }
+  .stage{ background: var(--panel); border-radius: 22px; padding: 22px 18px 20px; position: relative; overflow:hidden; box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 20px 50px rgba(0,0,0,0.35); }
+  .stage::before{ content:""; position:absolute; inset:0; background: radial-gradient(circle at 50% -10%, rgba(255,255,255,0.06), transparent 60%); pointer-events:none; }
+  .stage h2{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.28rem; margin:0 0 8px; }
+  .stage .lede{ font-size:0.88rem; color: var(--text-dim); line-height:1.5; margin: 0 0 4px; }
+
+  .live-tag{ display:inline-flex; align-items:center; gap:6px; background: rgba(76,255,192,0.1); border:1px solid rgba(76,255,192,0.4); color: var(--good); font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.64rem; padding:4px 11px; border-radius:20px; margin-bottom:12px; letter-spacing:0.6px; }
+  .live-tag .pulse-dot{ width:7px;height:7px;border-radius:50%; background: var(--good); box-shadow:0 0 8px var(--good); animation: orbpulse 1.4s ease-in-out infinite; }
+
+  /* aims */
+  .aim-card{ display:flex; gap:12px; align-items:flex-start; background: var(--panel-2); border-radius:14px; padding:14px; margin-bottom:10px; }
+  .aim-card .ico{ font-size:1.6rem; flex-shrink:0; }
+  .aim-card h4{ margin:0 0 4px; font-family:'Baloo 2',sans-serif; font-size:0.9rem; }
+  .aim-card p{ margin:0; font-size:0.82rem; color: var(--text-dim); line-height:1.4; }
+  .aim-tag{ display:inline-block; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.6rem; letter-spacing:0.5px; padding:2px 8px; border-radius:8px; margin-bottom:6px; }
+  .aim-tag.prog{ background: rgba(76,214,255,0.15); color: var(--zero); }
+  .aim-tag.quantum{ background: rgba(255,111,165,0.15); color: var(--pink); }
+
+  .cta{ width:100%; margin-top:14px; border:none; border-radius:16px; padding:14px; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1rem; cursor:pointer; background: linear-gradient(135deg, var(--accent), var(--accent-bright)); color:#fff; box-shadow: 0 0 24px rgba(124,111,255,0.4); }
+  .cta:disabled{ opacity:.35; cursor:default; box-shadow:none; }
+  .row2{ display:flex; gap:10px; margin-top:14px; }
+  .row2 button{ flex:1; border:none; border-radius: 14px; padding: 13px 6px; cursor:pointer; font-family:'Baloo 2', sans-serif; font-weight:700; font-size: 0.86rem; background: var(--panel-2); color: var(--text); }
+  .row2 button.primary{ background: linear-gradient(135deg, var(--good), #38b788); color:#08281c; box-shadow: 0 0 24px rgba(76,255,192,0.35); }
+  .row2 button:disabled{ opacity:.4; cursor:default; }
+
+  /* message display */
+  .msg-box{ text-align:center; margin: 16px 0; }
+  .msg-box .word{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:2.2rem; letter-spacing:6px; color:#fff; }
+  .msg-box .label{ font-size:0.68rem; color: var(--text-dim); margin-top:6px; }
+  .shift-control{ display:flex; align-items:center; justify-content:center; gap:14px; margin: 14px 0; }
+  .shift-control button{ width:42px; height:42px; border-radius:50%; border:none; background: var(--panel-2); color: var(--text); font-size:1.3rem; cursor:pointer; }
+  .shift-control .val{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.4rem; min-width:70px; text-align:center; }
+
+  .loop-log{ background: var(--bg-deep); border-radius:12px; padding:12px; margin:14px 0; height:120px; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:0.72rem; line-height:1.7; }
+  .loop-log .try{ color: var(--text-dim); } .loop-log .found{ color: var(--good); font-weight:700; }
+  .loop-counter{ text-align:center; margin: 10px 0; }
+  .loop-counter .num{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.8rem; color: var(--star); }
+  .loop-counter .lbl{ font-size:0.7rem; color: var(--text-dim); }
+
+  .code-panel{ display:none; background:#05060f; border-radius:12px; padding:14px; margin-top:10px; overflow-x:auto; border:1px solid rgba(255,255,255,0.06); }
+  .code-panel.open{ display:block; }
+  .code-panel pre{ margin:0; font-family:'JetBrains Mono',monospace; font-size:0.7rem; line-height:1.65; white-space:pre; }
+  .code-panel .cm{ color:#6B7A9E; } .code-panel .cd{ color:#B8E6FF; } .code-panel .ch{ color: var(--good); }
+
+  .block-palette{ display:flex; gap:10px; margin:16px 0 10px; }
+  .code-block{ flex:1; padding:14px 8px; border-radius:12px; text-align:center; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.85rem; color:#0B0E24; cursor:grab; user-select:none; touch-action:none; transition: opacity .2s ease; }
+  .code-block.try{ background: var(--zero); }
+  .code-block.loop{ background: linear-gradient(135deg, var(--pink), var(--accent-bright)); color:#fff; }
+  .code-block small{ display:block; font-family:'Nunito',sans-serif; font-weight:600; font-size:0.6rem; margin-top:2px; color: rgba(11,14,36,0.7); }
+  .code-block.locked{ opacity:.3; cursor:not-allowed; filter:grayscale(1); }
+  .palette-caption{ text-align:center; font-size:0.72rem; color: var(--text-dim); margin-bottom: 10px; }
+  .dragging-clone{ position:fixed; z-index:200; pointer-events:none; opacity:.92; width:130px; box-shadow:0 10px 26px rgba(0,0,0,0.45); }
+  .track-zone{ min-height:56px; background: var(--bg-deep); border:2px dashed rgba(255,255,255,0.15); border-radius:14px; padding:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; transition: border-color .2s ease, background .2s ease; }
+  .track-zone.drag-over{ border-color: var(--accent-bright); background: rgba(124,111,255,0.1); }
+  .track-chip{ padding:8px 12px; border-radius:10px; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.78rem; color:#0B0E24; }
+  .track-chip.try{ background: var(--zero); }
+  .track-chip.loop{ background: var(--pink); color:#fff; }
+  .track-chip.fixed{ background: var(--panel-2); color: var(--text); }
+
+  .lock-display{ text-align:center; margin: 14px 0; }
+  .lock-display .icon{ font-size:2.8rem; transition: transform .3s ease; display:inline-block; }
+  .lock-display .icon.cracked{ animation: crackpop .5s ease; }
+  @keyframes crackpop{ 0%{ transform:scale(.7) rotate(-10deg); } 60%{ transform:scale(1.25) rotate(6deg); } 100%{ transform:scale(1) rotate(0); } }
+  .sparkle{ position:fixed; width:6px;height:6px;border-radius:50%; background: var(--star); box-shadow:0 0 8px var(--star); pointer-events:none; z-index:80; animation: sparkle-fly .75s ease-out forwards; }
+  @keyframes sparkle-fly{ 0%{ transform:translate(0,0) scale(1); opacity:1; } 100%{ transform:translate(var(--tx), var(--ty)) scale(0); opacity:0; } }
+  .scan-sweep{ position:absolute; top:0; left:-60%; width:55%; height:100%; background: linear-gradient(90deg, transparent, rgba(124,111,255,0.10), transparent); animation: sweep 4.5s linear infinite; pointer-events:none; z-index:0; }
+  @keyframes sweep{ 0%{ left:-60%; } 100%{ left:110%; } }
+  .predict-row{ display:flex; gap:8px; margin: 12px 0; }
+  .predict-row button{ flex:1; border:none; border-radius:12px; padding:11px 6px; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.8rem; background: var(--panel-2); color: var(--text); cursor:pointer; }
+  .predict-row button.picked{ background: var(--accent); color:#fff; }
+
+  .bits-slider{ margin: 16px 0; }
+  input[type=range]{ width:100%; -webkit-appearance:none; appearance:none; height:8px; border-radius:6px; background: linear-gradient(90deg, var(--good), var(--zero), var(--pink)); outline:none; margin: 8px 0; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:24px; height:24px; border-radius:50%; background: #fff; border: 3px solid var(--accent); cursor:pointer; }
+  .bits-label{ text-align:center; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.95rem; }
+
+  .stat-callout{ display:flex; align-items:stretch; gap:8px; margin: 16px 0 6px; }
+  .stat-item{ flex:1; background: var(--bg-deep); border-radius:14px; padding:14px 8px; text-align:center; border:1px solid rgba(255,255,255,0.06); }
+  .stat-item .num{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.15rem; line-height:1.25; }
+  .stat-item.limit .num{ color: var(--limit); } .stat-item.quantum .num{ color: var(--good); }
+  .stat-item .lbl{ font-size:0.65rem; color: var(--text-dim); margin-top:6px; line-height:1.35; }
+  .stat-vs{ display:flex; align-items:center; justify-content:center; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:0.8rem; color: var(--text-dim); flex-shrink:0; }
+
+  .callback-box{ font-size:0.85rem; color: var(--text); background: var(--panel-2); border-radius:12px; padding:12px 14px; margin: 12px 0; line-height:1.5; }
+
+  /* recap / plenary */
+  .recap-card{ background: var(--panel-2); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  .recap-card h4{ font-family:'Baloo 2',sans-serif; font-size:0.9rem; margin:0 0 4px; color: var(--star); }
+  .recap-card p{ font-size:0.8rem; color: var(--text-dim); margin:0; line-height:1.45; }
+
+  .quiz-q{ background: var(--panel-2); border-radius:14px; padding:14px; margin-bottom:10px; }
+  .quiz-q p.qtext{ font-size:0.86rem; font-weight:700; margin:0 0 10px; color: var(--text); }
+  .quiz-opt{ display:block; width:100%; text-align:left; background: var(--bg-deep); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px 12px; margin-bottom:6px; color: var(--text); font-family:'Nunito',sans-serif; font-weight:600; font-size:0.82rem; cursor:pointer; }
+  .quiz-opt.correct{ background: rgba(76,255,192,0.2); border-color: var(--good); }
+  .quiz-opt.wrong{ background: rgba(255,92,122,0.18); border-color: var(--limit); }
+  .quiz-opt:disabled{ cursor:default; }
+  .quiz-explain{ font-size:0.76rem; color: var(--text-dim); margin-top:8px; line-height:1.4; }
+
+  .agent-card{ margin-top:18px; background: linear-gradient(160deg, rgba(124,111,255,0.22), rgba(76,255,192,0.14)); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:20px; text-align:center; }
+  .agent-card .rank{ font-family:'JetBrains Mono',monospace; font-size:0.65rem; color: var(--text-dim); letter-spacing:1.5px; margin-bottom:6px; }
+  .agent-card h3{ font-family:'Baloo 2',sans-serif; font-size:1.3rem; margin: 0 0 10px; color:#fff; }
+  .codename-row{ display:flex; gap:8px; margin-bottom:14px; }
+  .codename-row input{ flex:1; background: var(--bg-deep); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:10px 12px; color: var(--text); font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.9rem; }
+  .codename-row button{ background: var(--panel-2); border:none; border-radius:10px; padding:0 14px; font-size:1.1rem; cursor:pointer; }
+
+  .toast{ position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-24px); z-index:60; background: var(--good); color:#08281c; font-family:'Baloo 2',sans-serif; font-weight:700; padding: 10px 18px; border-radius:14px; opacity:0; transition: all .35s ease; pointer-events:none; font-size:0.85rem; white-space:nowrap; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .footer-note{ text-align:center; color: var(--text-dim); font-size: 0.72rem; margin-top: 18px; line-height:1.5; }
+  .info-toggle{ background:none;border:none;color: var(--text-dim); font-family:'Nunito',sans-serif; font-weight:700; font-size:0.76rem; cursor:pointer; padding:0; margin: 10px 0 0; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+  <header>
+    <div class="hero-icon"><div class="hero-orb"></div><div class="hero-orb b"></div></div>
+    <h1>The Cipher Room</h1>
+    <p>Write your first loop. Then find out why it can't crack every code forever.</p>
+    <div class="fine">Part of the Quantum Programming series — a companion to the Vault Heist.</div>
+  </header>
+
+  <div class="stepper" id="stepper"></div>
+
+  <!-- AIMS -->
+  <section class="screen active" id="screenAims">
+    <div class="stage">
+      <h2>Today's aims</h2>
+      <p class="lede">Two things, both explained in plain English — no coding background needed.</p>
+
+      <div class="aim-card">
+        <div class="ico">💻</div>
+        <div>
+          <span class="aim-tag prog">PROGRAMMING</span>
+          <h4>What's a loop?</h4>
+          <p>You'll write a program that repeats an action — "try this, check it, try the next one" — over and over until it finds an answer. Loops are one of the most-used building blocks in every piece of software ever written.</p>
+        </div>
+      </div>
+
+      <div class="aim-card">
+        <div class="ico">🔐</div>
+        <div>
+          <span class="aim-tag quantum">QUANTUM</span>
+          <h4>Why won't long passwords stay safe forever?</h4>
+          <p>You'll see exactly why a normal computer can't crack a good password — and why a quantum computer changes that maths. Real numbers, not hand-waving.</p>
+        </div>
+      </div>
+
+      <button class="cta" id="btnStartAims">Start →</button>
+    </div>
+  </section>
+
+  <!-- STEP 1: ENCODE -->
+  <section class="screen" id="screenEncode">
+    <div class="stage">
+      <div class="live-tag"><span class="pulse-dot"></span>STEP 1 · SCRAMBLE A MESSAGE</div>
+      <h2>Turn a word into a secret code</h2>
+      <p class="lede">Drag the block below into your program. It's a real instruction: "shift every letter forward by a chosen amount." That's what a program actually is — a rule, applied to data.</p>
+
+      <div class="msg-box">
+        <div class="word" id="plainWord">CODE</div>
+        <div class="label">your message</div>
+      </div>
+
+      <div class="palette-caption">Drag this into your program to encode the message</div>
+      <div class="block-palette">
+        <div class="code-block try" id="paletteShift">🔀 Shift Letters<small>drag me into the track</small></div>
+      </div>
+      <div class="track-zone" id="shiftTrackZone">
+        <div class="track-chip fixed">Message: CODE</div>
+      </div>
+
+      <div class="shift-control" id="shiftControl" style="display:none;">
+        <button id="shiftDown">−</button>
+        <div class="val mono" id="shiftVal">Shift 5</div>
+        <button id="shiftUp">+</button>
+      </div>
+      <div class="msg-box" id="cipherBox" style="display:none;">
+        <div class="word" id="cipherWord" style="color:var(--star);">HTIJ</div>
+        <div class="label">what a friend without the key would see</div>
+      </div>
+
+      <button class="cta" id="btnToEncodeNext" disabled>Now be the codebreaker →</button>
+    </div>
+    <p class="footer-note">This is called a Caesar shift — one of the oldest ciphers in history, still a perfect example of "a program is a rule applied to data."</p>
+  </section>
+
+  <!-- STEP 2: CRACK (LOOP) -->
+  <section class="screen" id="screenCrack">
+    <div class="stage">
+      <div class="scan-sweep"></div>
+      <div class="live-tag"><span class="pulse-dot"></span>STEP 2 · WRITE A LOOP</div>
+      <h2>Crack it back without knowing the shift</h2>
+      <p class="lede">A friend's computer only sees <span class="mono" id="crackCipherLabel">HTIJ</span> and knows it's looking for the word <span class="mono">CODE</span>. It doesn't know the shift. Try cracking it by hand first — drag the block below, once per guess.</p>
+
+      <div class="lock-display"><span class="icon" id="lockIcon">🔒</span></div>
+
+      <div class="palette-caption">Drag this in to try the next key — one drag, one guess</div>
+      <div class="block-palette">
+        <div class="code-block try" id="paletteTryKey">🔑 Try Next Key<small>one guess per drag</small></div>
+        <div class="code-block loop locked" id="paletteLoop">🔁 Repeat Until Found<small>🔒 unlocks after a few tries</small></div>
+      </div>
+      <div class="track-zone" id="crackTrackZone">
+        <div class="track-chip fixed">① Look at the secret code</div>
+      </div>
+
+      <div class="loop-counter">
+        <div class="num mono" id="loopCount">0</div>
+        <div class="lbl">keys tried so far</div>
+      </div>
+      <div class="loop-log" id="loopLog"></div>
+
+      <div class="row2">
+        <button id="btnToggleCode1">👨‍💻 View the code</button>
+      </div>
+      <div class="code-panel" id="codePanel1">
+        <pre id="codeOutput1"></pre>
+      </div>
+
+      <button class="cta" id="btnToScaleNext" disabled>See what happens with a longer key →</button>
+    </div>
+    <p class="footer-note">Real codebreaking checks whether decoded text makes sense using a dictionary. We simplified that to "does it match CODE?" — same loop, easier to see.</p>
+  </section>
+
+  <!-- STEP 3: SCALE + QUANTUM -->
+  <section class="screen" id="screenScale">
+    <div class="stage">
+      <div class="live-tag"><span class="pulse-dot"></span>STEP 3 · WHY LOOPS CAN TAKE FOREVER</div>
+      <h2>Make the key longer</h2>
+      <p class="lede">Our 26-letter alphabet only gave the loop 25 possible keys to try — instant. Real passwords use much bigger key spaces. Drag the slider and watch what happens to the loop.</p>
+
+      <div class="bits-slider">
+        <div class="bits-label"><span id="bitsVal">32</span>-bit key — <span class="mono" id="bitsCount">4,294,967,296</span> possible keys</div>
+        <input type="range" id="bitsSlider" min="0" max="9" step="1" value="4">
+      </div>
+
+      <div id="predictBlock">
+        <p class="lede" style="margin-top:14px;">Before we reveal it — guess how long a normal computer would take to crack a <b>64-bit</b> key, trying 1 billion a second.</p>
+        <div class="predict-row">
+          <button data-guess="seconds">Seconds</button>
+          <button data-guess="days">Days</button>
+          <button data-guess="centuries">Centuries+</button>
+        </div>
+      </div>
+
+      <div class="stat-callout" id="classicalRevealBlock" style="display:none;">
+        <div class="stat-item limit"><div class="lbl">A normal computer trying<br>1 billion keys/second would need</div><div class="num mono" id="classicalTime">4.3 seconds</div></div>
+      </div>
+
+      <button class="info-toggle" id="infoToggleQuantum">Now add a quantum computer to the picture</button>
+      <div id="quantumReveal" style="display:none;">
+        <div class="callback-box">Remember the Vault Heist? Quantum search can explore a huge pile of possibilities almost at once — so it only needs about the <b>square root</b> of the classical loop's work, not all of it.</div>
+        <div class="stat-callout">
+          <div class="stat-item limit"><div class="num mono" id="classicalTime2">4.3 seconds</div><div class="lbl">Classical computer</div></div>
+          <div class="stat-vs">VS</div>
+          <div class="stat-item quantum"><div class="num mono" id="quantumTime">under a second</div><div class="lbl">Quantum computer</div></div>
+        </div>
+        <div class="callback-box" id="scaleMessage">At small key sizes it barely matters. Keep dragging the slider up.</div>
+      </div>
+
+      <button class="cta" id="btnToPlenary">Finish up →</button>
+    </div>
+    <p class="footer-note">This is a simplified real comparison — it's why banks are already moving to longer, quantum-resistant keys today, years before powerful quantum computers exist.</p>
+  </section>
+
+  <!-- PLENARY -->
+  <section class="screen" id="screenPlenary">
+    <div class="stage">
+      <div class="live-tag"><span class="pulse-dot"></span>PLENARY</div>
+      <h2>Let's check what stuck</h2>
+      <p class="lede">Back to the two aims from the start.</p>
+
+      <div class="recap-card">
+        <h4>✅ Programming: What's a loop?</h4>
+        <p>A loop repeats an action — "try this, check it, try the next one" — until a condition is met. You watched one try every possible key, one at a time, and stop the moment it found the right one.</p>
+      </div>
+      <div class="recap-card">
+        <h4>✅ Quantum: Why won't long passwords stay safe forever?</h4>
+        <p>Classical brute force takes exponentially longer as keys get longer — a 128-bit key would take a classical computer far longer than the universe has existed. A quantum computer needs roughly the square root of that effort — which is why banks are switching to longer, quantum-resistant keys now.</p>
+      </div>
+
+      <h2 style="margin-top:20px;">Quick field test</h2>
+      <div id="fieldTestArea"></div>
+      <div class="recap-card" id="fieldTestResult" style="display:none;"></div>
+
+      <div class="agent-card">
+        <div class="rank">CIPHER ROOM — CODEBREAKER</div>
+        <h3 id="agentCardName">Codebreaker</h3>
+        <div class="codename-row">
+          <input type="text" id="codenameInput" placeholder="Type your codename" maxlength="24">
+          <button id="btnRandomName" title="Random codename">🎲</button>
+        </div>
+        <div class="row2" style="margin-top:4px;">
+          <button class="primary" id="btnCopyAgentCard">Copy my mission report</button>
+        </div>
+      </div>
+    </div>
+    <p class="footer-note">No hardware, no trick — real programming and real quantum mathematics, run live.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+  const wrap = document.getElementById('stars');
+  for(let i=0;i<40;i++){
+    const s = document.createElement('span');
+    s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%';
+    s.style.animationDelay = (Math.random()*3.5)+'s';
+    wrap.appendChild(s);
+  }
+})();
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=> t.classList.remove('show'), 2600);
+}
+
+/* ================= STEPPER ================= */
+const STAGE_ORDER = ['aims','encode','crack','scale','plenary'];
+const STAGE_LABELS = { aims:'🎯 Aims', encode:'1', crack:'2', scale:'3', plenary:'🏁 Debrief' };
+let currentStage = 'aims';
+let unlockedUpTo = 0;
+
+function renderStepper(){
+  const el = document.getElementById('stepper');
+  el.innerHTML = '';
+  STAGE_ORDER.forEach((key,i)=>{
+    const pill = document.createElement('div');
+    let cls = 'step-pill';
+    if (key===currentStage) cls += ' current';
+    else if (i < unlockedUpTo) cls += ' done';
+    else if (i > unlockedUpTo) cls += ' locked';
+    pill.className = cls;
+    pill.innerHTML = '<span class="dot"></span>'+STAGE_LABELS[key];
+    if (i <= unlockedUpTo && key !== currentStage) pill.addEventListener('click', ()=> goToStage(key));
+    el.appendChild(pill);
+  });
+}
+function goToStage(key){
+  currentStage = key;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const map = { aims:'screenAims', encode:'screenEncode', crack:'screenCrack', scale:'screenScale', plenary:'screenPlenary' };
+  document.getElementById(map[key]).classList.add('active');
+  if (key==='plenary') renderPlenary();
+  renderStepper();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function unlockNext(fromKey){
+  const idx = STAGE_ORDER.indexOf(fromKey);
+  if (idx+1 > unlockedUpTo) unlockedUpTo = idx+1;
+}
+
+document.getElementById('btnStartAims').addEventListener('click', ()=>{ unlockNext('aims'); goToStage('encode'); });
+
+/* ================= SHARED DRAG HELPER ================= */
+function makeDraggable(el, onDrop, zoneEl){
+  el.addEventListener('pointerdown', (e)=>{
+    if (el.classList.contains('locked')) return;
+    e.preventDefault();
+    const clone = el.cloneNode(true);
+    clone.classList.add('dragging-clone');
+    document.body.appendChild(clone);
+    function move(ev){
+      clone.style.left = (ev.clientX - 55) + 'px';
+      clone.style.top = (ev.clientY - 24) + 'px';
+      const r = zoneEl.getBoundingClientRect();
+      const inside = ev.clientX>=r.left && ev.clientX<=r.right && ev.clientY>=r.top && ev.clientY<=r.bottom;
+      zoneEl.classList.toggle('drag-over', inside);
+    }
+    move(e);
+    function up(ev){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      zoneEl.classList.remove('drag-over');
+      const r = zoneEl.getBoundingClientRect();
+      const inside = ev.clientX>=r.left && ev.clientX<=r.right && ev.clientY>=r.top && ev.clientY<=r.bottom;
+      clone.remove();
+      if (inside) onDrop();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  });
+}
+function spawnSparkles(el){
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  for(let i=0;i<10;i++){
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    const angle = (Math.PI*2*i)/10 + Math.random()*0.4;
+    const dist = 26 + Math.random()*22;
+    s.style.left = cx+'px'; s.style.top = cy+'px';
+    s.style.setProperty('--tx', (Math.cos(angle)*dist)+'px');
+    s.style.setProperty('--ty', (Math.sin(angle)*dist)+'px');
+    document.body.appendChild(s);
+    setTimeout(()=> s.remove(), 800);
+  }
+}
+
+/* ================= STEP 1: ENCODE (drag to build) ================= */
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const PLAINTEXT = 'CODE';
+let shiftKey = 5;
+let shiftBlockPlaced = false;
+
+function shiftText(text, key){
+  return text.split('').map(ch=>{
+    const idx = ALPHA.indexOf(ch);
+    if (idx===-1) return ch;
+    return ALPHA[(idx+key+26)%26];
+  }).join('');
+}
+function renderEncode(){
+  document.getElementById('shiftVal').textContent = 'Shift '+shiftKey;
+  document.getElementById('cipherWord').textContent = shiftText(PLAINTEXT, shiftKey);
+}
+makeDraggable(document.getElementById('paletteShift'), ()=>{
+  if (shiftBlockPlaced) return;
+  shiftBlockPlaced = true;
+  const zone = document.getElementById('shiftTrackZone');
+  const chip = document.createElement('div');
+  chip.className = 'track-chip try';
+  chip.textContent = '🔀 Shift Letters';
+  zone.appendChild(chip);
+  document.getElementById('shiftControl').style.display = 'flex';
+  document.getElementById('cipherBox').style.display = 'block';
+  document.getElementById('btnToEncodeNext').disabled = false;
+  renderEncode();
+  showToast('That block is now part of your program!');
+}, document.getElementById('shiftTrackZone'));
+
+document.getElementById('shiftUp').addEventListener('click', ()=>{ shiftKey = shiftKey>=25?4:shiftKey+1; renderEncode(); });
+document.getElementById('shiftDown').addEventListener('click', ()=>{ shiftKey = shiftKey<=4?25:shiftKey-1; renderEncode(); });
+
+document.getElementById('btnToEncodeNext').addEventListener('click', ()=>{
+  document.getElementById('crackCipherLabel').textContent = shiftText(PLAINTEXT, shiftKey);
+  unlockNext('encode');
+  goToStage('crack');
+  resetLoop();
+});
+
+/* ================= STEP 2: CRACK (manual, then automate with a loop) ================= */
+let manualTries = 0;
+let currentTryKey = 0;
+let loopFound = false;
+let loopRunning = false;
+const MANUAL_LIMIT = 3;
+
+function resetLoop(){
+  manualTries = 0; currentTryKey = 0; loopFound = false; loopRunning = false;
+  document.getElementById('loopCount').textContent = '0';
+  document.getElementById('loopLog').innerHTML = '';
+  document.getElementById('crackTrackZone').querySelectorAll('.track-chip:not(.fixed)').forEach(el=>el.remove());
+  document.getElementById('btnToScaleNext').disabled = true;
+  document.getElementById('lockIcon').textContent = '🔒';
+  document.getElementById('lockIcon').classList.remove('cracked');
+  const loopBlock = document.getElementById('paletteLoop');
+  loopBlock.classList.add('locked');
+  loopBlock.querySelector('small').textContent = '🔒 unlocks after a few tries';
+  renderCode1();
+}
+function renderCode1(){
+  const cipher = shiftText(PLAINTEXT, shiftKey);
+  const lines = [
+    '<span class="cm">secret = "'+cipher+'"</span>',
+    '<span class="cd">for key in range(1, 26):</span>',
+    '<span class="cd">    guess = shift_back(secret, key)</span>',
+    '<span class="cd">    if guess == "CODE":</span>',
+    '<span class="ch">        print("Found it! Key =", key)</span>',
+    '<span class="cd">        break</span>'
+  ];
+  document.getElementById('codeOutput1').innerHTML = lines.join('\n');
+}
+document.getElementById('btnToggleCode1').addEventListener('click', ()=>{
+  document.getElementById('codePanel1').classList.toggle('open');
+});
+
+function logLine(text, cls){
+  const log = document.getElementById('loopLog');
+  const line = document.createElement('div');
+  line.className = cls;
+  line.textContent = text;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+function checkKey(key){
+  const cipher = shiftText(PLAINTEXT, shiftKey);
+  const guess = shiftText(cipher, -key);
+  return guess === PLAINTEXT ? guess : null;
+}
+function crackSuccess(key){
+  loopFound = true;
+  logLine(`Trying key ${key}... that's it! ✅`, 'found');
+  document.getElementById('loopCount').textContent = key;
+  const lock = document.getElementById('lockIcon');
+  lock.textContent = '🔓';
+  lock.classList.add('cracked');
+  spawnSparkles(lock);
+  document.getElementById('btnToScaleNext').disabled = false;
+  showToast('🔓 Cracked in '+key+' tries!');
+}
+
+makeDraggable(document.getElementById('paletteTryKey'), ()=>{
+  if (loopFound || manualTries >= MANUAL_LIMIT) return;
+  manualTries++;
+  currentTryKey = manualTries;
+  document.getElementById('loopCount').textContent = currentTryKey;
+  const zone = document.getElementById('crackTrackZone');
+  const chip = document.createElement('div');
+  chip.className = 'track-chip try';
+  chip.textContent = '🔑 Try key '+currentTryKey;
+  zone.appendChild(chip);
+
+  const result = checkKey(currentTryKey);
+  if (result){ crackSuccess(currentTryKey); return; }
+  logLine(`Trying key ${currentTryKey}... nope.`, 'try');
+
+  if (manualTries >= MANUAL_LIMIT && !loopFound){
+    const loopBlock = document.getElementById('paletteLoop');
+    loopBlock.classList.remove('locked');
+    loopBlock.querySelector('small').textContent = 'drag me — automate the rest';
+    showToast('Imagine doing that up to 22 more times by hand...');
+  }
+}, document.getElementById('crackTrackZone'));
+
+makeDraggable(document.getElementById('paletteLoop'), ()=>{
+  if (loopRunning || loopFound || manualTries < MANUAL_LIMIT) return;
+  loopRunning = true;
+  const zone = document.getElementById('crackTrackZone');
+  const chip = document.createElement('div');
+  chip.className = 'track-chip loop';
+  chip.textContent = '🔁 Repeat Until Found';
+  zone.appendChild(chip);
+
+  let key = manualTries + 1;
+  function step(){
+    document.getElementById('loopCount').textContent = key;
+    const result = checkKey(key);
+    if (result){ crackSuccess(key); loopRunning = false; return; }
+    logLine(`Trying key ${key}... nope.`, 'try');
+    key++;
+    setTimeout(step, 90);
+  }
+  step();
+}, document.getElementById('crackTrackZone'));
+
+/* ================= STEP 3: SCALE + QUANTUM ================= */
+const BIT_STEPS = [4,8,16,24,32,40,48,64,96,128];
+const THROUGHPUT = 1e9; // guesses per second, illustrative
+
+function formatDuration(sec){
+  const universeAge = 31557600*13.8e9;
+  if (sec < 1) return 'under a second';
+  if (sec > universeAge){
+    const ratio = sec/universeAge;
+    return 'about ' + (ratio>=1000 ? ratio.toExponential(1) : ratio.toFixed(1)) + '× the age of the universe';
+  }
+  const units = [['year',31557600],['day',86400],['hour',3600],['minute',60],['second',1]];
+  for (const [name,s] of units){
+    if (sec >= s){
+      const val = sec/s;
+      return (val>=100 ? Math.round(val).toLocaleString() : val.toFixed(1)) + ' ' + name + (val>=2?'s':'');
+    }
+  }
+  return sec.toFixed(1)+' seconds';
+}
+
+function renderScale(){
+  const idx = parseInt(document.getElementById('bitsSlider').value, 10);
+  const bits = BIT_STEPS[idx];
+  const space = Math.pow(2, bits);
+  document.getElementById('bitsVal').textContent = bits;
+  document.getElementById('bitsCount').textContent = space >= 1e15 ? space.toExponential(2) : Math.round(space).toLocaleString();
+
+  const classicalSec = space/THROUGHPUT;
+  const quantumSec = Math.sqrt(space)/THROUGHPUT;
+  const cText = formatDuration(classicalSec);
+  const qText = formatDuration(quantumSec);
+  document.getElementById('classicalTime').textContent = cText;
+  document.getElementById('classicalTime2').textContent = cText;
+  document.getElementById('quantumTime').textContent = qText;
+
+  let msg;
+  if (bits <= 24) msg = "At this size, both a normal computer and a quantum computer crack it instantly. The difference doesn't matter yet.";
+  else if (bits <= 48) msg = "Now a normal computer is starting to sweat — but a quantum computer barely notices.";
+  else if (bits <= 64) msg = "This is the danger zone: a normal computer needs centuries. A quantum computer needs seconds.";
+  else msg = "Even at this length — safe from any classical computer for longer than the universe has existed — a quantum computer could still crack it within a human lifetime. That's exactly why banks are upgrading key sizes now.";
+  document.getElementById('scaleMessage').textContent = msg;
+}
+document.getElementById('bitsSlider').addEventListener('input', renderScale);
+document.querySelectorAll('.predict-row button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.predict-row button').forEach(b=>b.classList.remove('picked'));
+    btn.classList.add('picked');
+    document.getElementById('bitsSlider').value = 7; // 64-bit
+    renderScale();
+    document.getElementById('classicalRevealBlock').style.display = 'flex';
+    const correct = btn.dataset.guess === 'centuries';
+    showToast(correct ? '✅ Spot on — centuries.' : "😮 Actually: centuries. Bigger than you'd think.");
+  });
+});
+document.getElementById('infoToggleQuantum').addEventListener('click', (e)=>{
+  document.getElementById('quantumReveal').style.display = 'block';
+  e.target.style.display = 'none';
+  renderScale();
+});
+renderScale();
+
+document.getElementById('btnToScaleNext').addEventListener('click', ()=>{ unlockNext('crack'); goToStage('scale'); });
+document.getElementById('btnToPlenary').addEventListener('click', ()=>{ unlockNext('scale'); goToStage('plenary'); });
+
+/* ================= PLENARY ================= */
+const QUIZ = [
+  { q:'What do we call a step in a program that repeats until something is true?',
+    opts:['A variable','A loop','A function'], correct:1,
+    explain:'A loop repeats an action — exactly what "try key 1, try key 2..." was doing.' },
+  { q:"Why does adding a few more characters to a key make it MUCH harder to crack, not just a bit harder?",
+    opts:["Each extra character multiplies the total number of possible keys","Computers get tired","It doesn't really change much"], correct:0,
+    explain:'The number of possible keys doubles (at least) with every extra bit — that\'s exponential growth, not steady growth.' },
+  { q:'Why are banks worried about quantum computers and passwords?',
+    opts:['Quantum computers can explore many possible keys at once, needing far fewer tries','Quantum computers are just faster at everything','It isn\'t a real concern'], correct:0,
+    explain:'Same trick as the Vault Heist: exploring many possibilities at once means needing roughly the square root of the classical effort.' }
+];
+let quizScore = 0, quizAnswered = 0;
+
+function renderFieldTest(){
+  quizScore = 0; quizAnswered = 0;
+  document.getElementById('fieldTestResult').style.display = 'none';
+  const area = document.getElementById('fieldTestArea');
+  area.innerHTML = '';
+  QUIZ.forEach((item, qi)=>{
+    const box = document.createElement('div');
+    box.className = 'quiz-q';
+    const p = document.createElement('p');
+    p.className = 'qtext';
+    p.textContent = (qi+1)+'. '+item.q;
+    box.appendChild(p);
+    item.opts.forEach((opt, oi)=>{
+      const btn = document.createElement('button');
+      btn.className = 'quiz-opt';
+      btn.textContent = opt;
+      btn.addEventListener('click', ()=>{
+        const allBtns = box.querySelectorAll('.quiz-opt');
+        allBtns.forEach(b=> b.disabled = true);
+        if (oi === item.correct){ btn.classList.add('correct'); quizScore++; }
+        else { btn.classList.add('wrong'); allBtns[item.correct].classList.add('correct'); }
+        const ex = document.createElement('div');
+        ex.className = 'quiz-explain';
+        ex.textContent = item.explain;
+        box.appendChild(ex);
+        quizAnswered++;
+        if (quizAnswered === QUIZ.length){
+          const resEl = document.getElementById('fieldTestResult');
+          resEl.style.display = 'block';
+          resEl.innerHTML = '<h4>'+quizScore+'/'+QUIZ.length+'</h4><p>'+(quizScore===QUIZ.length ? 'Perfect score — you actually understood it.' : 'Worth a re-read of the explanations above.')+'</p>';
+          if (quizScore === QUIZ.length) showToast('🧠 Quiz ace!');
+        }
+      });
+      box.appendChild(btn);
+    });
+    area.appendChild(box);
+  });
+}
+
+const CODENAME_ADJ = ['Cipher','Phantom','Silent','Static','Shadow','Nova','Vortex','Echo'];
+const CODENAME_NOUN = ['Fox','Raven','Wolf','Ghost','Falcon','Viper','Storm','Hawk'];
+function randomCodename(){
+  return CODENAME_ADJ[Math.floor(Math.random()*CODENAME_ADJ.length)]+' '+CODENAME_NOUN[Math.floor(Math.random()*CODENAME_NOUN.length)];
+}
+document.getElementById('codenameInput').value = randomCodename();
+document.getElementById('btnRandomName').addEventListener('click', ()=>{
+  document.getElementById('codenameInput').value = randomCodename();
+});
+
+function renderPlenary(){ renderFieldTest(); }
+
+document.getElementById('btnCopyAgentCard').addEventListener('click', async ()=>{
+  const name = document.getElementById('codenameInput').value || 'Codebreaker';
+  const cipher = shiftText(PLAINTEXT, shiftKey);
+  const lines = [
+    `🔓 CODEBREAKER ${name.toUpperCase()} — MISSION COMPLETE`, '',
+    `▸ Wrote my first real loop — cracked "${cipher}" back to "CODE" by trying every key`,
+    `▸ Saw why a 128-bit key would take a classical computer 780+ billion times the age of the universe to crack`,
+    `▸ Saw why a quantum computer needs only the square root of that effort`,
+  ];
+  if (quizAnswered === QUIZ.length) lines.push(`▸ Field test: ${quizScore}/${QUIZ.length}`);
+  lines.push('', 'Real code, real maths — no trick.', 'I wrote my first loop today.');
+  const txt = lines.join('\n');
+  try{ await navigator.clipboard.writeText(txt); showToast('Copied! Go brag.'); }
+  catch(e){ showToast('Select and copy manually.'); }
+});
+
+renderStepper();
+</script>
+
+</body>
+</html>

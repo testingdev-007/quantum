@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>The Simulation Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep: #0B0E24; --panel: #1B2050; --panel-2: #242B66;
+    --zero: #4CD6FF; --one: #FFB238; --one-dim: #8A6631;
+    --text: #F5F7FF; --text-dim: #A9AFDC; --accent: #7C6FFF; --accent-bright: #9C90FF;
+    --good: #4CFFC0; --limit: #FF5C7A; --star: #FFE066; --pink: #FF6FA5;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 34px),
+      radial-gradient(circle at 20% 8%, rgba(124,111,255,0.20), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(76,214,255,0.14), transparent 40%),
+      var(--bg-deep);
+    color: var(--text); font-family: 'Nunito', sans-serif; min-height: 100vh;
+    display:flex; justify-content:center; padding: 18px 14px 50px;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .stars{ position: fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .stars span{ position:absolute; width:3px; height:3px; background:var(--star); border-radius:50%; opacity:.5; animation: twinkle 3.5s ease-in-out infinite; }
+  @keyframes twinkle{ 0%,100%{opacity:.15} 50%{opacity:.75} }
+  .app{ width:100%; max-width: 520px; position:relative; z-index:1; }
+
+  header{ text-align:center; margin: 6px 0 14px; }
+  .hero-icon{ display:flex; justify-content:center; align-items:center; gap:22px; margin-bottom: 10px; position:relative; height: 22px; }
+  .hero-icon::before{ content:""; position:absolute; left:calc(50% - 22px); right:calc(50% - 22px); top:50%; height:2px; background: linear-gradient(90deg, var(--zero), var(--one)); opacity:.6; }
+  .hero-orb{ width:14px;height:14px;border-radius:50%; background:var(--zero); box-shadow:0 0 16px var(--zero); animation: orbpulse 2.2s ease-in-out infinite; position:relative; z-index:1; }
+  .hero-orb.b{ background:var(--one); box-shadow:0 0 16px var(--one); animation-delay:.5s; }
+  @keyframes orbpulse{ 0%,100%{ transform:scale(1); opacity:.75;} 50%{ transform:scale(1.5); opacity:1; } }
+  header h1{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size: 2.1rem; margin: 0 0 6px;
+    background: linear-gradient(90deg, var(--zero), var(--accent-bright) 55%, var(--one));
+    -webkit-background-clip: text; background-clip:text; color: transparent;
+    filter: drop-shadow(0 0 22px rgba(124,111,255,0.4)); }
+  header p{ margin:0; color: var(--text-dim); font-size: 0.92rem; line-height:1.4; }
+  header .fine{ font-size:0.68rem; color: var(--text-dim); opacity:.65; margin-top:6px; }
+
+  .stepper{ display:flex; gap:6px; margin-bottom: 16px; background: var(--panel); border-radius: 14px; padding: 8px; }
+  .step-pill{ flex:1; text-align:center; padding: 8px 2px; border-radius:10px; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.68rem; color: var(--text-dim); cursor:default; }
+  .step-pill .dot{ display:block; width:9px;height:9px; border-radius:50%; background: rgba(255,255,255,0.15); margin: 0 auto 4px; }
+  .step-pill.current{ color:#fff; } .step-pill.current .dot{ background: var(--accent-bright); box-shadow: 0 0 10px var(--accent-bright); }
+  .step-pill.done{ color: var(--good); cursor:pointer; } .step-pill.done .dot{ background: var(--good); box-shadow: 0 0 8px var(--good); }
+  .step-pill.locked{ opacity:.35; }
+
+  section.screen{ display:none; } section.screen.active{ display:block; }
+  .stage{ background: var(--panel); border-radius: 22px; padding: 22px 18px 20px; position: relative; overflow:hidden; box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 20px 50px rgba(0,0,0,0.35); }
+  .stage::before{ content:""; position:absolute; inset:0; background: radial-gradient(circle at 50% -10%, rgba(255,255,255,0.06), transparent 60%); pointer-events:none; }
+  .stage h2{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.25rem; margin:0 0 8px; }
+  .stage .lede{ font-size:0.88rem; color: var(--text-dim); line-height:1.5; margin: 0 0 4px; }
+
+  .live-tag{ display:inline-flex; align-items:center; gap:6px; background: rgba(76,255,192,0.1); border:1px solid rgba(76,255,192,0.4); color: var(--good); font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.64rem; padding:4px 11px; border-radius:20px; margin-bottom:12px; letter-spacing:0.6px; }
+  .live-tag .pulse-dot{ width:7px;height:7px;border-radius:50%; background: var(--good); box-shadow:0 0 8px var(--good); animation: orbpulse 1.4s ease-in-out infinite; }
+
+  .aim-card{ display:flex; gap:12px; align-items:flex-start; background: var(--panel-2); border-radius:14px; padding:14px; margin-bottom:10px; }
+  .aim-card .ico{ font-size:1.6rem; flex-shrink:0; }
+  .aim-card h4{ margin:0 0 4px; font-family:'Baloo 2',sans-serif; font-size:0.9rem; }
+  .aim-card p{ margin:0; font-size:0.82rem; color: var(--text-dim); line-height:1.4; }
+  .aim-tag{ display:inline-block; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.6rem; letter-spacing:0.5px; padding:2px 8px; border-radius:8px; margin-bottom:6px; }
+  .aim-tag.prog{ background: rgba(76,214,255,0.15); color: var(--zero); }
+  .aim-tag.quantum{ background: rgba(255,111,165,0.15); color: var(--pink); }
+
+  .cta{ width:100%; margin-top:14px; border:none; border-radius:16px; padding:14px; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1rem; cursor:pointer; background: linear-gradient(135deg, var(--accent), var(--accent-bright)); color:#fff; box-shadow: 0 0 24px rgba(124,111,255,0.4); }
+  .cta:disabled{ opacity:.35; cursor:default; box-shadow:none; }
+  .row2{ display:flex; gap:10px; margin-top:14px; }
+  .row2 button{ flex:1; border:none; border-radius: 14px; padding: 13px 6px; cursor:pointer; font-family:'Baloo 2', sans-serif; font-weight:700; font-size: 0.86rem; background: var(--panel-2); color: var(--text); }
+  .row2 button.primary{ background: linear-gradient(135deg, var(--good), #38b788); color:#08281c; box-shadow: 0 0 24px rgba(76,255,192,0.35); }
+  .row2 button:disabled{ opacity:.4; cursor:default; }
+
+  .code-block{ flex:1; padding:14px 8px; border-radius:12px; text-align:center; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.85rem; color:#0B0E24; cursor:grab; user-select:none; touch-action:none; transition: opacity .2s ease; }
+  .code-block.try{ background: var(--zero); }
+  .code-block.loop{ background: linear-gradient(135deg, var(--pink), var(--accent-bright)); color:#fff; }
+  .code-block small{ display:block; font-family:'Nunito',sans-serif; font-weight:600; font-size:0.6rem; margin-top:2px; color: rgba(11,14,36,0.7); }
+  .code-block.locked{ opacity:.3; cursor:not-allowed; filter:grayscale(1); }
+  .block-palette{ display:flex; gap:10px; margin:16px 0 10px; }
+  .palette-caption{ text-align:center; font-size:0.72rem; color: var(--text-dim); margin-bottom: 10px; }
+  .dragging-clone{ position:fixed; z-index:200; pointer-events:none; opacity:.92; width:150px; box-shadow:0 10px 26px rgba(0,0,0,0.45); }
+  .track-zone{ min-height:56px; background: var(--bg-deep); border:2px dashed rgba(255,255,255,0.15); border-radius:14px; padding:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; transition: border-color .2s ease, background .2s ease; }
+  .track-zone.drag-over{ border-color: var(--accent-bright); background: rgba(124,111,255,0.1); }
+  .track-chip{ padding:8px 12px; border-radius:10px; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.76rem; background: var(--zero); color:#0B0E24; }
+  .track-chip.loop{ background: var(--pink); color:#fff; }
+  .track-empty{ font-size:0.72rem; color: var(--text-dim); opacity:.6; }
+
+  .year-result{ text-align:center; margin: 14px 0; }
+  .year-result .num{ font-family:'JetBrains Mono',monospace; font-weight:800; font-size:2.2rem; }
+  .year-result .num.gain{ color: var(--good); } .year-result .num.loss{ color: var(--limit); }
+  .year-result .lbl{ font-size:0.7rem; color: var(--text-dim); margin-top:4px; }
+  .manual-log{ display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin: 10px 0; }
+  .manual-log span{ font-family:'JetBrains Mono',monospace; font-size:0.72rem; padding:4px 9px; border-radius:8px; }
+  .manual-log span.gain{ background: rgba(76,255,192,0.15); color: var(--good); }
+  .manual-log span.loss{ background: rgba(255,92,122,0.15); color: var(--limit); }
+
+  .hist-wrap{ background: var(--bg-deep); border-radius:12px; padding:12px 10px 6px; margin: 14px 0; }
+  .hist-bars{ display:flex; align-items:flex-end; gap:2px; height:100px; }
+  .hist-col{ flex:1; background: linear-gradient(180deg, var(--zero), var(--accent)); border-radius:3px 3px 0 0; min-height:1px; transition: height .3s ease; }
+  .hist-col.neg{ background: linear-gradient(180deg, var(--limit), #8a2e42); }
+  .hist-axis{ display:flex; justify-content:space-between; font-size:0.6rem; color: var(--text-dim); margin-top:4px; }
+
+  .running-stats{ display:flex; gap:8px; margin: 12px 0; }
+  .stat-box{ flex:1; background: var(--bg-deep); border-radius:12px; padding:10px; text-align:center; }
+  .stat-box .num{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.15rem; color: var(--star); }
+  .stat-box .lbl{ font-size:0.64rem; color: var(--text-dim); margin-top:2px; }
+
+  .code-panel{ display:none; background:#05060f; border-radius:12px; padding:14px; margin-top:10px; overflow-x:auto; border:1px solid rgba(255,255,255,0.06); }
+  .code-panel.open{ display:block; }
+  .code-panel pre{ margin:0; font-family:'JetBrains Mono',monospace; font-size:0.7rem; line-height:1.65; white-space:pre; }
+  .code-panel .cm{ color:#6B7A9E; } .code-panel .cd{ color:#B8E6FF; } .code-panel .ch{ color: var(--good); }
+
+  .sparkle{ position:fixed; width:6px;height:6px;border-radius:50%; background: var(--star); box-shadow:0 0 8px var(--star); pointer-events:none; z-index:80; animation: sparkle-fly .75s ease-out forwards; }
+  @keyframes sparkle-fly{ 0%{ transform:translate(0,0) scale(1); opacity:1; } 100%{ transform:translate(var(--tx), var(--ty)) scale(0); opacity:0; } }
+  .scan-sweep{ position:absolute; top:0; left:-60%; width:55%; height:100%; background: linear-gradient(90deg, transparent, rgba(124,111,255,0.10), transparent); animation: sweep 4.5s linear infinite; pointer-events:none; z-index:0; }
+  @keyframes sweep{ 0%{ left:-60%; } 100%{ left:110%; } }
+
+  .bits-slider{ margin: 16px 0; }
+  input[type=range]{ width:100%; -webkit-appearance:none; appearance:none; height:8px; border-radius:6px; background: linear-gradient(90deg, var(--good), var(--zero), var(--pink)); outline:none; margin: 8px 0; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:24px; height:24px; border-radius:50%; background: #fff; border: 3px solid var(--accent); cursor:pointer; }
+  .bits-label{ text-align:center; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.95rem; }
+
+  .predict-row{ display:flex; gap:8px; margin: 12px 0; }
+  .predict-row button{ flex:1; border:none; border-radius:12px; padding:11px 6px; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.8rem; background: var(--panel-2); color: var(--text); cursor:pointer; }
+  .predict-row button.picked{ background: var(--accent); color:#fff; }
+
+  .stat-callout{ display:flex; align-items:stretch; gap:8px; margin: 16px 0 6px; }
+  .stat-item{ flex:1; background: var(--bg-deep); border-radius:14px; padding:14px 8px; text-align:center; border:1px solid rgba(255,255,255,0.06); }
+  .stat-item .num{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.05rem; line-height:1.25; }
+  .stat-item.limit .num{ color: var(--limit); } .stat-item.quantum .num{ color: var(--good); }
+  .stat-item .lbl{ font-size:0.65rem; color: var(--text-dim); margin-top:6px; line-height:1.35; }
+  .stat-vs{ display:flex; align-items:center; justify-content:center; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:0.8rem; color: var(--text-dim); flex-shrink:0; }
+  .callback-box{ font-size:0.85rem; color: var(--text); background: var(--panel-2); border-radius:12px; padding:12px 14px; margin: 12px 0; line-height:1.5; }
+  .info-toggle{ background:none;border:none;color: var(--text-dim); font-family:'Nunito',sans-serif; font-weight:700; font-size:0.76rem; cursor:pointer; padding:0; margin: 10px 0 0; text-decoration: underline; }
+
+  .recap-card{ background: var(--panel-2); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  .recap-card h4{ font-family:'Baloo 2',sans-serif; font-size:0.9rem; margin:0 0 4px; color: var(--star); }
+  .recap-card p{ font-size:0.8rem; color: var(--text-dim); margin:0; line-height:1.45; }
+
+  .quiz-q{ background: var(--panel-2); border-radius:14px; padding:14px; margin-bottom:10px; }
+  .quiz-q p.qtext{ font-size:0.86rem; font-weight:700; margin:0 0 10px; color: var(--text); }
+  .quiz-opt{ display:block; width:100%; text-align:left; background: var(--bg-deep); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px 12px; margin-bottom:6px; color: var(--text); font-family:'Nunito',sans-serif; font-weight:600; font-size:0.82rem; cursor:pointer; }
+  .quiz-opt.correct{ background: rgba(76,255,192,0.2); border-color: var(--good); }
+  .quiz-opt.wrong{ background: rgba(255,92,122,0.18); border-color: var(--limit); }
+  .quiz-opt:disabled{ cursor:default; }
+  .quiz-explain{ font-size:0.76rem; color: var(--text-dim); margin-top:8px; line-height:1.4; }
+
+  .agent-card{ margin-top:18px; background: linear-gradient(160deg, rgba(124,111,255,0.22), rgba(76,255,192,0.14)); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:20px; text-align:center; }
+  .agent-card .rank{ font-family:'JetBrains Mono',monospace; font-size:0.65rem; color: var(--text-dim); letter-spacing:1.5px; margin-bottom:6px; }
+  .agent-card h3{ font-family:'Baloo 2',sans-serif; font-size:1.3rem; margin: 0 0 10px; color:#fff; }
+  .codename-row{ display:flex; gap:8px; margin-bottom:14px; }
+  .codename-row input{ flex:1; background: var(--bg-deep); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:10px 12px; color: var(--text); font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.9rem; }
+  .codename-row button{ background: var(--panel-2); border:none; border-radius:10px; padding:0 14px; font-size:1.1rem; cursor:pointer; }
+
+  .toast{ position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-24px); z-index:60; background: var(--good); color:#08281c; font-family:'Baloo 2',sans-serif; font-weight:700; padding: 10px 18px; border-radius:14px; opacity:0; transition: all .35s ease; pointer-events:none; font-size:0.85rem; white-space:nowrap; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .footer-note{ text-align:center; color: var(--text-dim); font-size: 0.72rem; margin-top: 18px; line-height:1.5; }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+  <header>
+    <div class="hero-icon"><div class="hero-orb"></div><div class="hero-orb b"></div></div>
+    <h1>The Simulation Room</h1>
+    <p>You can't predict the future. But you can simulate a thousand of them.</p>
+    <div class="fine">Part of the Quantum Programming series.</div>
+  </header>
+
+  <div class="stepper" id="stepper"></div>
+
+  <!-- AIMS -->
+  <section class="screen active" id="screenAims">
+    <div class="stage">
+      <h2>Today's aims</h2>
+      <p class="lede">Two things, both explained in plain English.</p>
+      <div class="aim-card">
+        <div class="ico">💻</div>
+        <div>
+          <span class="aim-tag prog">PROGRAMMING</span>
+          <h4>What's a simulation?</h4>
+          <p>You'll use a loop and randomness together — running the same "what if" over and over — to estimate an answer you couldn't calculate directly. This is called Monte Carlo simulation.</p>
+        </div>
+      </div>
+      <div class="aim-card">
+        <div class="ico">🎲</div>
+        <div>
+          <span class="aim-tag quantum">QUANTUM</span>
+          <h4>Why quantum computers need far fewer guesses</h4>
+          <p>You'll see exactly how many simulations you need for a trustworthy answer — and why quantum computers can get the same confidence with dramatically fewer.</p>
+        </div>
+      </div>
+      <button class="cta" id="btnStartAims">Start →</button>
+    </div>
+  </section>
+
+  <!-- STEP 1: MANUAL SIMULATE -->
+  <section class="screen" id="screenManual">
+    <div class="stage">
+      <div class="live-tag"><span class="pulse-dot"></span>STEP 1 · SIMULATE ONE YEAR</div>
+      <h2>Will this investment lose money next year?</h2>
+      <p class="lede">Nobody can know for certain — but we can simulate a random possible year and see what happens. Drag the block below to run one.</p>
+
+      <div class="palette-caption">Drag this in to simulate one possible year</div>
+      <div class="block-palette">
+        <div class="code-block try" id="paletteSimOne">🎲 Simulate One Year<small>one guess at the future</small></div>
+      </div>
+      <div class="track-zone" id="manualTrackZone">
+        <div class="track-empty">Drag the block here</div>
+      </div>
+
+      <div class="year-result">
+        <div class="num mono" id="yearNum">—</div>
+        <div class="lbl">this simulated year's return</div>
+      </div>
+      <div class="manual-log" id="manualLog"></div>
+
+      <button class="info-toggle" id="infoToggleManual">So... is it risky or not?</button>
+      <div class="callback-box" id="manualAnswer" style="display:none;"></div>
+
+      <button class="cta" id="btnToAutoNext" disabled>This isn't enough to be sure →</button>
+    </div>
+    <p class="footer-note">A handful of simulations barely tells you anything — that's the whole reason Monte Carlo simulation runs thousands, not three.</p>
+  </section>
+
+  <!-- STEP 2: AUTOMATE -->
+  <section class="screen" id="screenAuto">
+    <div class="stage">
+      <div class="scan-sweep"></div>
+      <div class="live-tag"><span class="pulse-dot"></span>STEP 2 · AUTOMATE WITH A LOOP</div>
+      <h2>Run a thousand possible years</h2>
+      <p class="lede">Drag the loop block below to simulate 1,000 years automatically, and watch the pattern emerge as they pile up.</p>
+
+      <div class="block-palette">
+        <div class="code-block loop" id="paletteSim1000">🔁 Simulate 1,000 Years<small>drag me — automate it</small></div>
+      </div>
+      <div class="track-zone" id="autoTrackZone">
+        <div class="track-empty">Drag the loop block here</div>
+      </div>
+
+      <div class="hist-wrap">
+        <div class="hist-bars" id="histBars"></div>
+        <div class="hist-axis"><span>−30%</span><span>0%</span><span>+40%</span></div>
+      </div>
+
+      <div class="running-stats">
+        <div class="stat-box"><div class="num mono" id="simCount">0</div><div class="lbl">years simulated</div></div>
+        <div class="stat-box"><div class="num mono" id="lossPct">—</div><div class="lbl">estimated chance of a loss year</div></div>
+      </div>
+
+      <div class="row2">
+        <button id="btnToggleCode1">👨‍💻 View the code</button>
+      </div>
+      <div class="code-panel" id="codePanel1">
+        <pre id="codeOutput1"></pre>
+      </div>
+
+      <button class="cta" id="btnToPrecisionNext" disabled>How trustworthy is that number? →</button>
+    </div>
+    <p class="footer-note">The true chance of a loss year, given this range, is exactly 42.9% — see how close your 1,000 simulations got.</p>
+  </section>
+
+  <!-- STEP 3: PRECISION + QUANTUM -->
+  <section class="screen" id="screenPrecision">
+    <div class="stage">
+      <div class="live-tag"><span class="pulse-dot"></span>STEP 3 · HOW MANY DO YOU ACTUALLY NEED?</div>
+      <h2>Getting a more precise answer</h2>
+      <p class="lede">Before we reveal it — to get your answer <b>10x more precise</b>, how many more simulations do you think you need?</p>
+
+      <div class="predict-row">
+        <button data-guess="10x">About 10x more</button>
+        <button data-guess="100x">About 100x more</button>
+      </div>
+
+      <div id="precisionReveal" style="display:none;">
+        <div class="bits-slider">
+          <div class="bits-label">Target precision: within <span id="precisionVal">10</span>%</div>
+          <input type="range" id="precisionSlider" min="0" max="3" step="1" value="0">
+        </div>
+        <div class="stat-callout">
+          <div class="stat-item limit"><div class="lbl">Classical simulations needed</div><div class="num mono" id="classicalSims">100</div></div>
+        </div>
+
+        <button class="info-toggle" id="infoToggleQuantum">Now add a quantum computer to the picture</button>
+        <div id="quantumReveal" style="display:none;">
+          <div class="callback-box">Remember the Vault Heist, Cipher Room, and Investment Puzzle? Quantum computers can estimate an average using something called amplitude estimation — needing roughly the <b>square root</b> of the classical simulation count for the same precision.</div>
+          <div class="stat-callout">
+            <div class="stat-item limit"><div class="num mono" id="classicalSims2">100</div><div class="lbl">Classical simulations</div></div>
+            <div class="stat-vs">VS</div>
+            <div class="stat-item quantum"><div class="num mono" id="quantumSims">10</div><div class="lbl">Quantum simulations</div></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="cta" id="btnToPlenary">Finish up →</button>
+    </div>
+    <p class="footer-note">This is real: Goldman Sachs and IBM have published research on exactly this speedup for pricing and risk in finance.</p>
+  </section>
+
+  <!-- PLENARY -->
+  <section class="screen" id="screenPlenary">
+    <div class="stage">
+      <div class="live-tag"><span class="pulse-dot"></span>PLENARY</div>
+      <h2>Let's check what stuck</h2>
+      <p class="lede">Back to the two aims from the start.</p>
+      <div class="recap-card">
+        <h4>✅ Programming: What's a simulation?</h4>
+        <p>A loop that repeats a random "what if" many times, collecting results, then averaging them — used when you can't calculate an answer directly, only estimate it.</p>
+      </div>
+      <div class="recap-card">
+        <h4>✅ Quantum: Why quantum computers need far fewer guesses</h4>
+        <p>Classical simulation needs 100x more samples for 10x more precision — a steep cost. Quantum amplitude estimation needs only about the square root of that — the same trick behind every activity in this series.</p>
+      </div>
+
+      <h2 style="margin-top:20px;">Quick field test</h2>
+      <div id="fieldTestArea"></div>
+      <div class="recap-card" id="fieldTestResult" style="display:none;"></div>
+
+      <div class="agent-card">
+        <div class="rank">SIMULATION ROOM — RISK ANALYST</div>
+        <h3 id="agentCardName">Risk Analyst</h3>
+        <div class="codename-row">
+          <input type="text" id="codenameInput" placeholder="Type your codename" maxlength="24">
+          <button id="btnRandomName" title="Random codename">🎲</button>
+        </div>
+        <div class="row2" style="margin-top:4px;">
+          <button class="primary" id="btnCopyAgentCard">Copy my mission report</button>
+        </div>
+      </div>
+    </div>
+    <p class="footer-note">No hardware, no trick — real programming and real quantum mathematics, run live.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+  const wrap = document.getElementById('stars');
+  for(let i=0;i<40;i++){
+    const s = document.createElement('span');
+    s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%';
+    s.style.animationDelay = (Math.random()*3.5)+'s';
+    wrap.appendChild(s);
+  }
+})();
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=> t.classList.remove('show'), 2600);
+}
+function spawnSparkles(el){
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  for(let i=0;i<10;i++){
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    const angle = (Math.PI*2*i)/10 + Math.random()*0.4;
+    const dist = 26 + Math.random()*22;
+    s.style.left = cx+'px'; s.style.top = cy+'px';
+    s.style.setProperty('--tx', (Math.cos(angle)*dist)+'px');
+    s.style.setProperty('--ty', (Math.sin(angle)*dist)+'px');
+    document.body.appendChild(s);
+    setTimeout(()=> s.remove(), 800);
+  }
+}
+function makeDraggable(el, onDrop, zoneEl){
+  el.addEventListener('pointerdown', (e)=>{
+    if (el.classList.contains('locked')) return;
+    e.preventDefault();
+    const clone = el.cloneNode(true);
+    clone.classList.add('dragging-clone');
+    document.body.appendChild(clone);
+    function move(ev){
+      clone.style.left = (ev.clientX - 65) + 'px';
+      clone.style.top = (ev.clientY - 24) + 'px';
+      const r = zoneEl.getBoundingClientRect();
+      const inside = ev.clientX>=r.left && ev.clientX<=r.right && ev.clientY>=r.top && ev.clientY<=r.bottom;
+      zoneEl.classList.toggle('drag-over', inside);
+    }
+    move(e);
+    function up(ev){
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      zoneEl.classList.remove('drag-over');
+      const r = zoneEl.getBoundingClientRect();
+      const inside = ev.clientX>=r.left && ev.clientX<=r.right && ev.clientY>=r.top && ev.clientY<=r.bottom;
+      clone.remove();
+      if (inside) onDrop();
+    }
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  });
+}
+
+/* ================= STEPPER ================= */
+const STAGE_ORDER = ['aims','manual','auto','precision','plenary'];
+const STAGE_LABELS = { aims:'🎯 Aims', manual:'1', auto:'2', precision:'3', plenary:'🏁 Debrief' };
+let currentStage = 'aims';
+let unlockedUpTo = 0;
+function renderStepper(){
+  const el = document.getElementById('stepper');
+  el.innerHTML = '';
+  STAGE_ORDER.forEach((key,i)=>{
+    const pill = document.createElement('div');
+    let cls = 'step-pill';
+    if (key===currentStage) cls += ' current';
+    else if (i < unlockedUpTo) cls += ' done';
+    else if (i > unlockedUpTo) cls += ' locked';
+    pill.className = cls;
+    pill.innerHTML = '<span class="dot"></span>'+STAGE_LABELS[key];
+    if (i <= unlockedUpTo && key !== currentStage) pill.addEventListener('click', ()=> goToStage(key));
+    el.appendChild(pill);
+  });
+}
+function goToStage(key){
+  currentStage = key;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const map = { aims:'screenAims', manual:'screenManual', auto:'screenAuto', precision:'screenPrecision', plenary:'screenPlenary' };
+  document.getElementById(map[key]).classList.add('active');
+  if (key==='plenary') renderPlenary();
+  renderStepper();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function unlockNext(fromKey){
+  const idx = STAGE_ORDER.indexOf(fromKey);
+  if (idx+1 > unlockedUpTo) unlockedUpTo = idx+1;
+}
+document.getElementById('btnStartAims').addEventListener('click', ()=>{ unlockNext('aims'); goToStage('manual'); });
+
+/* ================= STEP 1: MANUAL SIMULATE ================= */
+const MIN_RET = -30, MAX_RET = 40; // percent
+const TRUE_LOSS_PROB = -MIN_RET/(MAX_RET-MIN_RET); // 30/70
+function simulateYear(){ return Math.random()*(MAX_RET-MIN_RET) + MIN_RET; }
+
+let manualResults = [];
+const MANUAL_LIMIT = 3;
+
+makeDraggable(document.getElementById('paletteSimOne'), ()=>{
+  if (manualResults.length >= MANUAL_LIMIT) return;
+  const r = simulateYear();
+  manualResults.push(r);
+  const zone = document.getElementById('manualTrackZone');
+  if (manualResults.length === 1) zone.innerHTML = '';
+  const chip = document.createElement('div');
+  chip.className = 'track-chip';
+  chip.textContent = '🎲 Year '+manualResults.length;
+  zone.appendChild(chip);
+
+  const yearEl = document.getElementById('yearNum');
+  yearEl.textContent = (r>=0?'+':'')+r.toFixed(1)+'%';
+  yearEl.className = 'num mono ' + (r>=0?'gain':'loss');
+
+  const log = document.getElementById('manualLog');
+  const tag = document.createElement('span');
+  tag.className = r>=0?'gain':'loss';
+  tag.textContent = (r>=0?'+':'')+r.toFixed(1)+'%';
+  log.appendChild(tag);
+
+  if (manualResults.length >= MANUAL_LIMIT){
+    document.getElementById('btnToAutoNext').disabled = false;
+    showToast('Only 3 guesses — hard to trust that, right?');
+  }
+}, document.getElementById('manualTrackZone'));
+
+document.getElementById('infoToggleManual').addEventListener('click', (e)=>{
+  const losses = manualResults.filter(r=>r<0).length;
+  const box = document.getElementById('manualAnswer');
+  box.style.display = 'block';
+  box.textContent = manualResults.length === 0
+    ? "Try a few simulations first — then ask again."
+    : `From just ${manualResults.length} tries, ${losses} were loss years. That could easily be pure chance — 3 samples tells you almost nothing reliable. You need a lot more.`;
+});
+
+document.getElementById('btnToAutoNext').addEventListener('click', ()=>{ unlockNext('manual'); goToStage('auto'); });
+
+/* ================= STEP 2: AUTOMATE ================= */
+const HIST_BUCKETS = 14; // -30 to +40 in 5% steps
+let histCounts = new Array(HIST_BUCKETS).fill(0);
+let totalSims = 0, lossSims = 0;
+let autoRunning = false;
+
+function bucketFor(r){
+  const idx = Math.floor((r-MIN_RET)/((MAX_RET-MIN_RET)/HIST_BUCKETS));
+  return Math.max(0, Math.min(HIST_BUCKETS-1, idx));
+}
+function renderHist(){
+  const wrap = document.getElementById('histBars');
+  wrap.innerHTML = '';
+  const maxCount = Math.max(...histCounts, 1);
+  histCounts.forEach((c, i)=>{
+    const col = document.createElement('div');
+    const bucketStart = MIN_RET + i*((MAX_RET-MIN_RET)/HIST_BUCKETS);
+    col.className = 'hist-col' + (bucketStart<0 ? ' neg' : '');
+    col.style.height = Math.max((c/maxCount*100), c>0?4:1)+'%';
+    wrap.appendChild(col);
+  });
+  document.getElementById('simCount').textContent = totalSims;
+  document.getElementById('lossPct').textContent = totalSims ? (lossSims/totalSims*100).toFixed(1)+'%' : '—';
+}
+function renderCode1(){
+  const lines = [
+    '<span class="cd">losses = 0</span>',
+    '<span class="cd">for year in range(1000):</span>',
+    '<span class="cd">    outcome = random_return(-30, 40)</span>',
+    '<span class="cd">    if outcome < 0:</span>',
+    '<span class="ch">        losses += 1</span>',
+    '<span class="cd">chance_of_loss = losses / 1000</span>'
+  ];
+  document.getElementById('codeOutput1').innerHTML = lines.join('\n');
+}
+document.getElementById('btnToggleCode1').addEventListener('click', ()=>{
+  document.getElementById('codePanel1').classList.toggle('open');
+});
+renderHist(); renderCode1();
+
+makeDraggable(document.getElementById('paletteSim1000'), ()=>{
+  if (autoRunning) return;
+  autoRunning = true;
+  const zone = document.getElementById('autoTrackZone');
+  zone.innerHTML = '';
+  const chip = document.createElement('div');
+  chip.className = 'track-chip loop';
+  chip.textContent = '🔁 Simulate 1,000 Years';
+  zone.appendChild(chip);
+
+  let done = 0;
+  const batchSize = 25;
+  function batch(){
+    for(let i=0;i<batchSize && done<1000; i++, done++){
+      const r = simulateYear();
+      histCounts[bucketFor(r)]++;
+      totalSims++;
+      if (r<0) lossSims++;
+    }
+    renderHist();
+    if (done < 1000){
+      setTimeout(batch, 20);
+    } else {
+      autoRunning = false;
+      document.getElementById('btnToPrecisionNext').disabled = false;
+      spawnSparkles(document.getElementById('histBars'));
+      showToast('1,000 years simulated — pattern locked in.');
+    }
+  }
+  batch();
+}, document.getElementById('autoTrackZone'));
+
+document.getElementById('btnToPrecisionNext').addEventListener('click', ()=>{ unlockNext('auto'); goToStage('precision'); });
+
+/* ================= STEP 3: PRECISION + QUANTUM ================= */
+const PRECISION_STEPS = [10, 1, 0.1, 0.01]; // percent error target
+function renderPrecision(){
+  const idx = parseInt(document.getElementById('precisionSlider').value, 10);
+  const pct = PRECISION_STEPS[idx];
+  document.getElementById('precisionVal').textContent = pct;
+  const classicalN = Math.round(1/Math.pow(pct/100, 2));
+  const quantumN = Math.round(1/(pct/100));
+  const fmt = (n)=> n>=1e9 ? n.toExponential(2) : n.toLocaleString();
+  document.getElementById('classicalSims').textContent = fmt(classicalN);
+  document.getElementById('classicalSims2').textContent = fmt(classicalN);
+  document.getElementById('quantumSims').textContent = fmt(quantumN);
+}
+document.getElementById('precisionSlider').addEventListener('input', renderPrecision);
+document.querySelectorAll('.predict-row button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.predict-row button').forEach(b=>b.classList.remove('picked'));
+    btn.classList.add('picked');
+    document.getElementById('precisionReveal').style.display = 'block';
+    renderPrecision();
+    const correct = btn.dataset.guess === '100x';
+    showToast(correct ? '✅ Right — 100x more, not 10x.' : '😮 Actually 100x — precision is expensive classically.');
+  });
+});
+document.getElementById('infoToggleQuantum').addEventListener('click', (e)=>{
+  document.getElementById('quantumReveal').style.display = 'block';
+  e.target.style.display = 'none';
+});
+document.getElementById('btnToPlenary').addEventListener('click', ()=>{ unlockNext('precision'); goToStage('plenary'); });
+
+/* ================= PLENARY ================= */
+const QUIZ = [
+  { q:'What do we call repeating a random "what if" many times to estimate an answer?',
+    opts:['A conditional','A Monte Carlo simulation','A variable'], correct:1,
+    explain:'You loop through random possible outcomes and average the results — that\'s Monte Carlo simulation, named after the casino.' },
+  { q:'To make your simulated answer 10x more precise, how many more simulations do you actually need?',
+    opts:['About 10x more','About 100x more','The same amount'], correct:1,
+    explain:'Precision improves with the square root of your sample count — so 10x more precision costs 100x more simulations.' },
+  { q:'Why can quantum computers estimate the same answer with far fewer simulations?',
+    opts:['They use a technique called amplitude estimation, needing roughly the square root of the classical count','They just run each simulation faster','It isn\'t actually true'], correct:0,
+    explain:'Same shape of speedup as every activity in this series — quadratically fewer steps for the same confidence.' }
+];
+let quizScore = 0, quizAnswered = 0;
+function renderFieldTest(){
+  quizScore = 0; quizAnswered = 0;
+  document.getElementById('fieldTestResult').style.display = 'none';
+  const area = document.getElementById('fieldTestArea');
+  area.innerHTML = '';
+  QUIZ.forEach((item, qi)=>{
+    const box = document.createElement('div');
+    box.className = 'quiz-q';
+    const p = document.createElement('p');
+    p.className = 'qtext';
+    p.textContent = (qi+1)+'. '+item.q;
+    box.appendChild(p);
+    item.opts.forEach((opt, oi)=>{
+      const btn = document.createElement('button');
+      btn.className = 'quiz-opt';
+      btn.textContent = opt;
+      btn.addEventListener('click', ()=>{
+        const allBtns = box.querySelectorAll('.quiz-opt');
+        allBtns.forEach(b=> b.disabled = true);
+        if (oi === item.correct){ btn.classList.add('correct'); quizScore++; }
+        else { btn.classList.add('wrong'); allBtns[item.correct].classList.add('correct'); }
+        const ex = document.createElement('div');
+        ex.className = 'quiz-explain';
+        ex.textContent = item.explain;
+        box.appendChild(ex);
+        quizAnswered++;
+        if (quizAnswered === QUIZ.length){
+          const resEl = document.getElementById('fieldTestResult');
+          resEl.style.display = 'block';
+          resEl.innerHTML = '<h4>'+quizScore+'/'+QUIZ.length+'</h4><p>'+(quizScore===QUIZ.length ? 'Perfect score — you actually understood it.' : 'Worth a re-read of the explanations above.')+'</p>';
+          if (quizScore === QUIZ.length) showToast('🧠 Quiz ace!');
+        }
+      });
+      box.appendChild(btn);
+    });
+    area.appendChild(box);
+  });
+}
+const CODENAME_ADJ = ['Random','Steady','Sigma','Lucky','Quiet','Nova','Keen','Bold'];
+const CODENAME_NOUN = ['Fox','Owl','Hawk','Wolf','Falcon','Otter','Lynx','Crane'];
+function randomCodename(){
+  return CODENAME_ADJ[Math.floor(Math.random()*CODENAME_ADJ.length)]+' '+CODENAME_NOUN[Math.floor(Math.random()*CODENAME_NOUN.length)];
+}
+document.getElementById('codenameInput').value = randomCodename();
+document.getElementById('btnRandomName').addEventListener('click', ()=>{
+  document.getElementById('codenameInput').value = randomCodename();
+});
+function renderPlenary(){ renderFieldTest(); }
+document.getElementById('btnCopyAgentCard').addEventListener('click', async ()=>{
+  const name = document.getElementById('codenameInput').value || 'Risk Analyst';
+  const estPct = totalSims ? (lossSims/totalSims*100).toFixed(1) : '—';
+  const lines = [
+    `🎲 RISK ANALYST ${name.toUpperCase()} — MISSION COMPLETE`, '',
+    `▸ Simulated ${totalSims} possible years — estimated ${estPct}% chance of a loss year (true answer: 42.9%)`,
+    `▸ Learned that 10x more precision costs 100x more simulations, classically`,
+    `▸ Saw why quantum amplitude estimation needs only the square root of that`,
+  ];
+  if (quizAnswered === QUIZ.length) lines.push(`▸ Field test: ${quizScore}/${QUIZ.length}`);
+  lines.push('', 'Real Monte Carlo simulation, real quantum maths — no trick.', 'I wrote real code today.');
+  const txt = lines.join('\n');
+  try{ await navigator.clipboard.writeText(txt); showToast('Copied! Go brag.'); }
+  catch(e){ showToast('Select and copy manually.'); }
+});
+
+renderStepper();
+</script>
+
+</body>
+</html>

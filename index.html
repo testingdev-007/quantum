@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Quantum Programming — Start Here</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep: #0B0E24; --panel: #1B2050; --panel-2: #242B66;
+    --zero: #4CD6FF; --one: #FFB238;
+    --text: #F5F7FF; --text-dim: #A9AFDC; --accent: #7C6FFF; --accent-bright: #9C90FF;
+    --good: #4CFFC0; --star: #FFE066; --pink: #FF6FA5;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 34px),
+      radial-gradient(circle at 20% 8%, rgba(124,111,255,0.20), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(76,214,255,0.14), transparent 40%),
+      var(--bg-deep);
+    color: var(--text); font-family: 'Nunito', sans-serif; min-height: 100vh;
+    display:flex; justify-content:center; padding: 20px 14px 50px;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .stars{ position: fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .stars span{ position:absolute; width:3px; height:3px; background:var(--star); border-radius:50%; opacity:.5; animation: twinkle 3.5s ease-in-out infinite; }
+  @keyframes twinkle{ 0%,100%{opacity:.15} 50%{opacity:.75} }
+  .app{ width:100%; max-width: 540px; position:relative; z-index:1; }
+
+  header{ text-align:center; margin: 6px 0 26px; }
+  .hero-icon{ display:flex; justify-content:center; align-items:center; gap:22px; margin-bottom: 12px; position:relative; height: 22px; }
+  .hero-icon::before{ content:""; position:absolute; left:calc(50% - 22px); right:calc(50% - 22px); top:50%; height:2px; background: linear-gradient(90deg, var(--zero), var(--one)); opacity:.6; }
+  .hero-orb{ width:14px;height:14px;border-radius:50%; background:var(--zero); box-shadow:0 0 16px var(--zero); animation: orbpulse 2.2s ease-in-out infinite; position:relative; z-index:1; }
+  .hero-orb.b{ background:var(--one); box-shadow:0 0 16px var(--one); animation-delay:.5s; }
+  @keyframes orbpulse{ 0%,100%{ transform:scale(1); opacity:.75;} 50%{ transform:scale(1.5); opacity:1; } }
+  header h1{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size: 2.3rem; margin: 0 0 8px;
+    background: linear-gradient(90deg, var(--zero), var(--accent-bright) 55%, var(--one));
+    -webkit-background-clip: text; background-clip:text; color: transparent;
+    filter: drop-shadow(0 0 22px rgba(124,111,255,0.4)); }
+  header p{ margin:0 auto; color: var(--text-dim); font-size: 0.94rem; line-height:1.5; max-width:400px; }
+
+  .section-label{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.68rem; color: var(--text-dim); letter-spacing:1.5px; margin: 22px 4px 10px; }
+
+  .card{ display:block; text-decoration:none; color:inherit; background: var(--panel); border-radius: 20px; padding: 20px; margin-bottom: 14px; position:relative; overflow:hidden; box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 14px 34px rgba(0,0,0,0.3); transition: transform .15s ease; border-top: 3px solid var(--accent-color, var(--accent)); }
+  a.card:active{ transform: scale(0.98); }
+  .card::before{ content:""; position:absolute; inset:0; background: radial-gradient(circle at 90% -20%, rgba(255,255,255,0.06), transparent 55%); pointer-events:none; }
+  .card.disabled{ opacity:.6; }
+  .card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .card .icon{ font-size:2.1rem; flex-shrink:0; }
+  .card h3{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.18rem; margin:10px 0 6px; }
+  .card p{ font-size:0.85rem; color: var(--text-dim); margin:0 0 12px; line-height:1.48; }
+  .tags{ display:flex; gap:6px; flex-wrap:wrap; }
+  .tag{ font-family:'JetBrains Mono',monospace; font-size:0.6rem; font-weight:700; padding:3px 9px; border-radius:8px; letter-spacing:0.3px; }
+  .tag.live{ background: rgba(76,255,192,0.15); color: var(--good); }
+  .tag.soon{ background: rgba(255,255,255,0.08); color: var(--text-dim); }
+  .tag.prog{ background: rgba(76,214,255,0.15); color: var(--zero); }
+  .tag.quantum{ background: rgba(255,111,165,0.15); color: var(--pink); }
+  .card-arrow{ font-size:1.3rem; color: var(--text-dim); flex-shrink:0; }
+
+  .footer-note{ text-align:center; color: var(--text-dim); font-size: 0.72rem; margin-top: 24px; line-height:1.6; }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="app">
+  <header>
+    <div class="hero-icon"><div class="hero-orb"></div><div class="hero-orb b"></div></div>
+    <h1>Quantum Programming</h1>
+    <p>An intro to coding for complete beginners — told through real quantum computing and real finance examples. Pick an activity to start.</p>
+  </header>
+
+  <div class="section-label">▸ LIVE NOW</div>
+
+  <a class="card" href="quantum-coin-lab.html" style="--accent-color:var(--accent-bright);">
+    <div class="card-top">
+      <div class="icon">🔓</div>
+      <div class="card-arrow">→</div>
+    </div>
+    <h3>The Vault Heist</h3>
+    <p>Drag real code blocks to build a quantum search program, crack a vault before a classical computer can, then prove entanglement beats classical logic itself.</p>
+    <div class="tags">
+      <span class="tag live">● LIVE</span>
+      <span class="tag prog">SEQUENCES</span>
+      <span class="tag quantum">GROVER'S ALGORITHM</span>
+      <span class="tag quantum">ENTANGLEMENT</span>
+    </div>
+  </a>
+
+  <a class="card" href="cipher-room.html" style="--accent-color:var(--pink);">
+    <div class="card-top">
+      <div class="icon">🔐</div>
+      <div class="card-arrow">→</div>
+    </div>
+    <h3>The Cipher Room</h3>
+    <p>Manually crack a secret code by hand, then drag in a block that automates the whole boring process for you — and find out why quantum computers threaten every password on Earth.</p>
+    <div class="tags">
+      <span class="tag live">● LIVE</span>
+      <span class="tag prog">LOOPS</span>
+      <span class="tag quantum">QUANTUM SEARCH</span>
+      <span class="tag quantum">CRYPTOGRAPHY</span>
+    </div>
+  </a>
+
+  <div class="section-label">▸ LIVE NOW</div>
+
+  <a class="card" href="portfolio-puzzle.html" style="--accent-color:var(--one);">
+    <div class="card-top">
+      <div class="icon">📊</div>
+      <div class="card-arrow">→</div>
+    </div>
+    <h3>The Investment Puzzle</h3>
+    <p>Build the best possible investment portfolio under real constraints, discover why checking every combination gets impossible fast, and see how quantum computers explore many combinations at once.</p>
+    <div class="tags">
+      <span class="tag live">● LIVE</span>
+      <span class="tag prog">CONDITIONALS</span>
+      <span class="tag quantum">OPTIMIZATION</span>
+    </div>
+  </a>
+
+  <a class="card" href="simulation-room.html" style="--accent-color:var(--zero);">
+    <div class="card-top">
+      <div class="icon">🎲</div>
+      <div class="card-arrow">→</div>
+    </div>
+    <h3>The Simulation Room</h3>
+    <p>Simulate thousands of possible futures to predict financial risk, watch the law of large numbers make your answer more reliable, and see why quantum computers need far fewer simulations for the same confidence.</p>
+    <div class="tags">
+      <span class="tag live">● LIVE</span>
+      <span class="tag prog">RANDOMNESS &amp; LOOPS</span>
+      <span class="tag quantum">MONTE CARLO</span>
+    </div>
+  </a>
+
+  <p class="footer-note">Four activities, four programming fundamentals — sequences, loops, conditionals, and randomness — each taught through something genuinely exciting rather than a textbook example. No installation, no account, works on any shared machine.</p>
+</div>
+
+<script>
+(function(){
+  const wrap = document.getElementById('stars');
+  for(let i=0;i<40;i++){
+    const s = document.createElement('span');
+    s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%';
+    s.style.animationDelay = (Math.random()*3.5)+'s';
+    wrap.appendChild(s);
+  }
+})();
+</script>
+
+</body>
+</html>
