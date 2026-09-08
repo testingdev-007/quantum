@@ -115,6 +115,20 @@
   .loop-log{ background: var(--bg-deep); border-radius:12px; padding:12px; margin:14px 0; height:120px; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:0.7rem; line-height:1.7; }
   .loop-log .try{ color: var(--text-dim); } .loop-log .better{ color: var(--star); } .loop-log .found{ color: var(--good); font-weight:700; }
   .loop-counter{ text-align:center; margin: 10px 0; }
+
+  .judge-card{ background: var(--bg-deep); border-radius:16px; padding:18px; margin:14px 0; text-align:center; }
+  .judge-names{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1.02rem; margin-bottom:10px; line-height:1.4; }
+  .judge-risk{ font-size:0.85rem; color: var(--text-dim); margin-bottom:14px; }
+  .judge-progress{ text-align:center; font-size:0.72rem; color: var(--text-dim); margin-bottom:6px; }
+  .year-result{ text-align:center; margin: 12px 0; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.95rem; color: var(--text); min-height:1.4rem; }
+
+  .leaderboard{ display:flex; flex-direction:column; gap:8px; margin:14px 0; }
+  .lb-row{ display:flex; align-items:center; gap:12px; background: var(--panel-2); border-radius:12px; padding:12px 14px; }
+  .lb-row.you{ background: linear-gradient(135deg, rgba(76,255,192,0.18), rgba(124,111,255,0.14)); border:1px solid rgba(76,255,192,0.35); }
+  .lb-rank{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1rem; width:24px; color: var(--text-dim); }
+  .lb-row.you .lb-rank{ color: var(--good); }
+  .lb-name{ flex:1; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.85rem; }
+  .lb-score{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.95rem; color: var(--star); }
   .loop-counter .num{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.8rem; color: var(--star); }
   .loop-counter .lbl{ font-size:0.7rem; color: var(--text-dim); }
 
@@ -159,9 +173,24 @@
   .toast{ position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-24px); z-index:60; background: var(--good); color:#08281c; font-family:'Baloo 2',sans-serif; font-weight:700; padding: 10px 18px; border-radius:14px; opacity:0; transition: all .35s ease; pointer-events:none; font-size:0.85rem; white-space:nowrap; }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   .footer-note{ text-align:center; color: var(--text-dim); font-size: 0.72rem; margin-top: 18px; line-height:1.5; }
+  .home-link{ position:fixed; top:14px; left:14px; z-index:45; background:var(--panel); color:var(--text-dim); text-decoration:none; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.72rem; padding:8px 12px; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); }
+  .home-link:hover{ color: var(--text); }
+
+  .victory-overlay{ display:none; position:fixed; inset:0; background: rgba(6,7,20,0.92); z-index:70; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+  .victory-overlay.open{ display:flex; }
+  .victory-box{ background: linear-gradient(160deg, rgba(124,111,255,0.28), rgba(76,255,192,0.16)); border:1px solid rgba(255,255,255,0.18); border-radius:24px; padding:32px 24px; text-align:center; max-width:440px; animation: victoryPop .5s cubic-bezier(.34,1.56,.64,1); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  @keyframes victoryPop{ 0%{ transform:scale(.7); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
+  .victory-box .big-emoji{ font-size:3.4rem; margin-bottom:8px; }
+  .victory-box h2{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.4rem; margin:0 0 12px; line-height:1.3; background: linear-gradient(90deg, var(--good), var(--star), var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .victory-box p{ font-size:0.9rem; color: var(--text); line-height:1.6; margin:0 0 16px; }
+  .victory-box .inspire{ font-size:0.8rem; color: var(--text-dim); background: rgba(0,0,0,0.25); border-radius:12px; padding:14px; margin-bottom:18px; line-height:1.55; text-align:left; }
+  .victory-box button{ width:100%; border:none; border-radius:14px; padding:14px; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1rem; cursor:pointer; background: linear-gradient(135deg, var(--good), #38b788); color:#08281c; }
+  .confetti-piece{ position:fixed; top:-20px; width:8px; height:14px; z-index:71; pointer-events:none; animation: confettiFall linear forwards; }
+  @keyframes confettiFall{ 0%{ transform:translateY(0) rotate(0deg); opacity:1; } 100%{ transform:translateY(100vh) rotate(720deg); opacity:0.4; } }
 </style>
 </head>
 <body>
+<a class="home-link" href="index.html">🏠 All activities</a>
 
 <div class="stars" id="stars"></div>
 <div class="toast" id="toast"></div>
@@ -214,14 +243,14 @@
       </div>
       <div class="invalid-banner" id="invalidBanner">⚠️ Over the risk limit — this portfolio is invalid. Remove something.</div>
 
-      <div class="track-zone" id="portfolioZone">
-        <div class="track-empty">Drag investments here</div>
-      </div>
-
+      <div class="palette-caption">Drag investments down into your portfolio</div>
       <div class="invest-palette" id="investPalette"></div>
 
-      <button class="info-toggle" id="infoToggleCode0">👨‍💻 View the code checking your portfolio</button>
-      <div class="code-panel" id="codePanel0">
+      <div class="track-zone" id="portfolioZone">
+        <div class="track-empty">Your portfolio — drag investments here</div>
+      </div>
+
+      <div class="code-panel open" id="codePanel0">
         <pre id="codeOutput0"></pre>
       </div>
 
@@ -234,31 +263,29 @@
   <section class="screen" id="screenProve">
     <div class="stage">
       <div class="scan-sweep"></div>
-      <div class="live-tag"><span class="pulse-dot"></span>STEP 2 · PROVE IT'S THE BEST</div>
-      <h2>Is there something better out there?</h2>
-      <p class="lede">Your portfolio scores <span class="mono" id="yourScoreLabel">0</span> return. There are 64 possible combinations of these 6 investments. Let's check a few by hand first.</p>
+      <div class="live-tag"><span class="pulse-dot"></span>STEP 2 · JUDGE THE RULE</div>
+      <h2>Be the conditional yourself</h2>
+      <p class="lede">Your portfolio scores <span class="mono" id="yourScoreLabel">0</span> return. Before we search for something better, let's practice the actual rule: risk ≤ 10 is valid, anything over is invalid. You judge — the computer checks your work.</p>
 
-      <div class="palette-caption">Drag this in to check one random valid combination</div>
-      <div class="block-palette">
-        <div class="code-block try" id="paletteTryCombo">🔍 Try Another Combo<small>one check per drag</small></div>
-        <div class="code-block loop locked" id="paletteCheckAll"><span id="checkAllLabel">🔁 Check Every Combination</span><small id="checkAllSub">🔒 unlocks after a few tries</small></div>
+      <div class="judge-card" id="judgeCard">
+        <div class="judge-names" id="judgeNames">—</div>
+        <div class="judge-risk">Total risk: <span class="mono" id="judgeRisk">0</span> <span class="mono" style="color:var(--text-dim);">(limit 10)</span></div>
+        <div class="predict-row">
+          <button id="btnJudgeValid">✅ Valid</button>
+          <button id="btnJudgeInvalid">❌ Invalid</button>
+        </div>
+        <div class="callback-box" id="judgeFeedback" style="display:none;"></div>
       </div>
-      <div class="track-zone" id="proveTrackZone">
-        <div class="track-empty">Drag a block here</div>
-      </div>
+      <div class="judge-progress mono" id="judgeProgress">Judged: 0 of 5</div>
 
-      <div class="loop-counter">
-        <div class="num mono" id="comboCount">0</div>
-        <div class="lbl">combinations checked</div>
-      </div>
-      <div class="loop-log" id="comboLog"></div>
-
-      <div class="row2">
-        <button id="btnToggleCode1">👨‍💻 View the code</button>
-      </div>
-      <div class="code-panel" id="codePanel1">
+      <div class="code-panel open" id="codePanel1">
         <pre id="codeOutput1"></pre>
       </div>
+
+      <div class="row2">
+        <button class="primary" id="btnRunFullSearch" disabled>🔁 Run the full search (all 63 combos)</button>
+      </div>
+      <div class="loop-log" id="comboLog"></div>
 
       <button class="cta" id="btnToScaleNext" disabled>See what happens with more investments →</button>
     </div>
@@ -270,37 +297,70 @@
     <div class="stage">
       <div class="live-tag"><span class="pulse-dot"></span>STEP 3 · WHY THIS GETS HARD FAST</div>
       <h2>Add more investment options</h2>
-      <p class="lede">6 investments gave 64 combinations to check — instant. Real portfolios choose from dozens of options. Drag the slider and watch what happens.</p>
+      <p class="lede">6 investments gave 64 combinations to check — instant. Real institutional portfolios choose from dozens of options, and each check involves testing real constraints, not just simple maths. Drag the slider and watch both computers, live.</p>
 
       <div class="bits-slider">
         <div class="bits-label"><span id="optCount">6</span> investment options — <span class="mono" id="comboTotal">64</span> possible combinations</div>
-        <input type="range" id="optSlider" min="6" max="30" step="2" value="6">
+        <input type="range" id="optSlider" min="6" max="50" step="2" value="6">
       </div>
       <div class="stat-callout">
-        <div class="stat-item limit"><div class="lbl">A computer checking 1 billion<br>combinations/second would need</div><div class="num mono" id="classicalTime">under a second</div></div>
+        <div class="stat-item limit"><div class="num mono" id="classicalTime">under a second</div><div class="lbl">Classical computer<br>(10 million checks/sec)</div></div>
+        <div class="stat-vs">VS</div>
+        <div class="stat-item quantum"><div class="num mono" id="quantumTime">under a second</div><div class="lbl">Quantum computer<br>(same throughput)</div></div>
       </div>
+      <div class="callback-box">Remember the Vault Heist and the Cipher Room? Quantum computers can explore huge numbers of combinations using superposition — the same trick, applied to picking investments instead of guessing keys.</div>
+      <div class="callback-box" id="scaleMessage">At small sizes it barely matters. Keep dragging the slider up.</div>
 
-      <button class="info-toggle" id="infoToggleQuantum">Now add a quantum computer to the picture</button>
-      <div id="quantumReveal" style="display:none;">
-        <div class="callback-box">Remember the Vault Heist and the Cipher Room? Quantum computers can explore huge numbers of combinations using superposition — the same trick, applied to picking investments instead of guessing keys.</div>
-        <div class="stat-callout">
-          <div class="stat-item limit"><div class="num mono" id="classicalTime2">under a second</div><div class="lbl">Classical computer</div></div>
-          <div class="stat-vs">VS</div>
-          <div class="stat-item quantum"><div class="num mono" id="quantumTime">under a second</div><div class="lbl">Quantum computer</div></div>
-        </div>
-        <div class="callback-box" id="scaleMessage">At small sizes it barely matters. Keep dragging the slider up.</div>
-      </div>
-
-      <button class="cta" id="btnToPlenary">Finish up →</button>
+      <button class="cta" id="btnToQSearch">Now build the quantum search yourself →</button>
     </div>
     <p class="footer-note">Real banks (like CaixaBank, with Multiverse Computing) have already tested this exact idea on real 52-investment portfolios.</p>
+  </section>
+
+  <!-- STEP 4: BUILD THE QUANTUM SEARCH -->
+  <section class="screen" id="screenQSearch">
+    <div class="stage">
+      <div class="scan-sweep"></div>
+      <div class="live-tag"><span class="pulse-dot"></span>STEP 4 · REAL QUANTUM CODE</div>
+      <h2>Search your actual 63 combinations, quantumly</h2>
+      <p class="lede">Not a simplified example this time — these are the exact same 63 combinations from your own portfolio, with the exact same best answer marked. Build a real Grover search to find it.</p>
+
+      <div class="palette-caption">Drag blocks to build a real quantum search program</div>
+      <div class="block-palette">
+        <div class="code-block try" id="qsPaletteMark">🎯 Mark<small>flag the best combo</small></div>
+        <div class="code-block loop" id="qsPaletteBoost">📈 Boost<small>amplify the odds</small></div>
+      </div>
+      <div class="track-zone" id="qsTrackZone">
+        <div class="track-chip fixed">① Look at all 63 combinations at once</div>
+      </div>
+
+      <div class="gauge-wrap">
+        <div class="gauge-val mono" id="qsGaugeVal">—</div>
+        <div class="gauge-label">chance this finds the best portfolio in one guess</div>
+        <div class="gauge-track"><div class="gauge-fill" id="qsGaugeFill" style="width:0%"></div></div>
+        <div class="gauge-hint" id="qsGaugeHint"></div>
+      </div>
+
+      <div class="code-panel open" id="qsCodePanel">
+        <pre id="qsCodeOutput"></pre>
+      </div>
+
+      <button class="cta" id="qsMeasureBtn">Measure it! 🎲</button>
+      <div class="year-result"><div class="num mono" id="qsResult">—</div></div>
+
+      <button class="cta" id="btnToPlenary" disabled>Finish up →</button>
+    </div>
+    <p class="footer-note">This isn't a metaphor — it's real amplitude amplification, checking 63 possibilities at once instead of one at a time.</p>
   </section>
 
   <!-- PLENARY -->
   <section class="screen" id="screenPlenary">
     <div class="stage">
       <div class="live-tag"><span class="pulse-dot"></span>PLENARY</div>
-      <h2>Let's check what stuck</h2>
+      <h2>The leaderboard</h2>
+      <p class="lede">Three rival fund managers, computed the same way you just proved works. Where did you land?</p>
+      <div class="leaderboard" id="leaderboard"></div>
+
+      <h2 style="margin-top:22px;">Let's check what stuck</h2>
       <p class="lede">Back to the two aims from the start.</p>
       <div class="recap-card">
         <h4>✅ Programming: What's a conditional check?</h4>
@@ -325,10 +385,24 @@
         <div class="row2" style="margin-top:4px;">
           <button class="primary" id="btnCopyAgentCard">Copy my mission report</button>
         </div>
+        <div class="row2">
+          <a class="cta" style="display:block; text-decoration:none; text-align:center; box-sizing:border-box;" href="index.html">🏁 Finish — back to all activities</a>
+        </div>
       </div>
     </div>
     <p class="footer-note">No hardware, no trick — real programming and real quantum mathematics, run live.</p>
   </section>
+</div>
+
+<!-- VICTORY OVERLAY -->
+<div class="victory-overlay" id="victoryOverlay">
+  <div class="victory-box">
+    <div class="big-emoji">🎉</div>
+    <h2>You wrote real code — classical AND quantum</h2>
+    <p>Real conditional logic, a real brute-force search, and then a real quantum program — Grover's algorithm, actually running — that found your best portfolio out of 63 in a single guess. That's the same approach banks like CaixaBank have piloted on real money.</p>
+    <div class="inspire">Nobody starts as an expert — every quant and quantum programmer alive started exactly like this: curious, trying something, watching it actually work. If that felt exciting, that feeling is worth paying attention to.</div>
+    <button id="btnCloseVictory">See my results →</button>
+  </div>
 </div>
 
 <script>
@@ -362,6 +436,23 @@ function spawnSparkles(el){
     setTimeout(()=> s.remove(), 800);
   }
 }
+function spawnConfetti(){
+  const colors = ['#4CFFC0','#FFE066','#FF6FA5','#4CD6FF','#FFB238','#9C90FF'];
+  for(let i=0;i<50;i++){
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = (Math.random()*100)+'vw';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (2.2+Math.random()*1.6)+'s';
+    p.style.animationDelay = (Math.random()*0.5)+'s';
+    document.body.appendChild(p);
+    setTimeout(()=> p.remove(), 4500);
+  }
+}
+let victoryShown = false;
+document.getElementById('btnCloseVictory').addEventListener('click', ()=>{
+  document.getElementById('victoryOverlay').classList.remove('open');
+});
 function makeDraggable(el, onDrop, zoneEl){
   el.addEventListener('pointerdown', (e)=>{
     if (el.classList.contains('locked') || el.classList.contains('placed')) return;
@@ -392,8 +483,8 @@ function makeDraggable(el, onDrop, zoneEl){
 }
 
 /* ================= STEPPER ================= */
-const STAGE_ORDER = ['aims','build','prove','scale','plenary'];
-const STAGE_LABELS = { aims:'🎯 Aims', build:'1', prove:'2', scale:'3', plenary:'🏁 Debrief' };
+const STAGE_ORDER = ['aims','build','prove','scale','qsearch','plenary'];
+const STAGE_LABELS = { aims:'🎯 Aims', build:'1', prove:'2', scale:'3', qsearch:'⚛️', plenary:'🏁 Debrief' };
 let currentStage = 'aims';
 let unlockedUpTo = 0;
 function renderStepper(){
@@ -414,9 +505,16 @@ function renderStepper(){
 function goToStage(key){
   currentStage = key;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  const map = { aims:'screenAims', build:'screenBuild', prove:'screenProve', scale:'screenScale', plenary:'screenPlenary' };
+  const map = { aims:'screenAims', build:'screenBuild', prove:'screenProve', scale:'screenScale', qsearch:'screenQSearch', plenary:'screenPlenary' };
   document.getElementById(map[key]).classList.add('active');
-  if (key==='plenary') renderPlenary();
+  if (key==='plenary'){
+    renderPlenary();
+    if (!victoryShown){
+      victoryShown = true;
+      document.getElementById('victoryOverlay').classList.add('open');
+      spawnConfetti();
+    }
+  }
   renderStepper();
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -501,9 +599,6 @@ function renderCode0(ret, risk, valid){
   ];
   document.getElementById('codeOutput0').innerHTML = lines.join('\n');
 }
-document.getElementById('infoToggleCode0').addEventListener('click', ()=>{
-  document.getElementById('codePanel0').classList.toggle('open');
-});
 renderPalette();
 renderPortfolio();
 
@@ -526,40 +621,49 @@ const ALL_COMBOS = (()=>{
 })();
 const BEST_COMBO = ALL_COMBOS.filter(c=>c.valid).reduce((best,c)=> (!best || c.ret>best.ret) ? c : best, null);
 
-let manualTries = 0;
+let judgeIndex = 0;
+let judgeScore = 0;
+let judgeCandidates = [];
 let bestSoFar = null;
 let comboFound = false;
 let comboRunning = false;
-const MANUAL_LIMIT = 3;
-const triedMasks = new Set();
+const JUDGE_LIMIT = 5;
 
 function resetProve(){
   const {ret} = computeTotals(portfolio);
   document.getElementById('yourScoreLabel').textContent = ret;
-  bestSoFar = { mask: portfolio.reduce((m,id)=>m|(1<<id),0), ret, ids: portfolio.slice() };
-  manualTries = 0; comboFound = false; comboRunning = false; triedMasks.clear();
-  triedMasks.add(bestSoFar.mask);
-  document.getElementById('comboCount').textContent = '0';
+  const yourMask = portfolio.reduce((m,id)=>m|(1<<id),0);
+  bestSoFar = { mask: yourMask, ret, ids: portfolio.slice() };
+  comboFound = false; comboRunning = false;
+  judgeIndex = 0; judgeScore = 0;
+
+  const pool = ALL_COMBOS.filter(c=>c.mask !== yourMask);
+  judgeCandidates = [];
+  const usedMasks = new Set([yourMask]);
+  while (judgeCandidates.length < JUDGE_LIMIT){
+    const pick = pool[Math.floor(Math.random()*pool.length)];
+    if (usedMasks.has(pick.mask)) continue;
+    usedMasks.add(pick.mask);
+    judgeCandidates.push(pick);
+  }
+
   document.getElementById('comboLog').innerHTML = '';
-  document.getElementById('proveTrackZone').querySelectorAll('.track-chip').forEach(el=>el.remove());
   document.getElementById('btnToScaleNext').disabled = true;
-  const loopBlock = document.getElementById('paletteCheckAll');
-  loopBlock.classList.add('locked');
-  document.getElementById('checkAllSub').textContent = '🔒 unlocks after a few tries';
+  document.getElementById('btnRunFullSearch').disabled = true;
+  document.getElementById('judgeCard').style.display = 'block';
+  document.getElementById('judgeFeedback').style.display = 'none';
   renderCode1();
+  renderJudgeCard();
 }
 function renderCode1(){
   const lines = [
     '<span class="cm">best = your_portfolio</span>',
-    '<span class="cd">for combo in all_64_combinations:</span>',
+    '<span class="cd">for combo in all_63_combinations:</span>',
     '<span class="cd">    if valid(combo) and combo.return > best.return:</span>',
     '<span class="ch">        best = combo</span>'
   ];
   document.getElementById('codeOutput1').innerHTML = lines.join('\n');
 }
-document.getElementById('btnToggleCode1').addEventListener('click', ()=>{
-  document.getElementById('codePanel1').classList.toggle('open');
-});
 function logLine(text, cls){
   const log = document.getElementById('comboLog');
   const line = document.createElement('div');
@@ -571,88 +675,75 @@ function logLine(text, cls){
 function nameCombo(ids){
   return ids.map(id=>INVESTMENTS[id].name.split(' ')[0]).join('+') || '(empty)';
 }
-function pickUntried(){
-  const untried = ALL_COMBOS.filter(c=>!triedMasks.has(c.mask));
-  return untried[Math.floor(Math.random()*untried.length)];
-}
 function celebrateWin(){
-  const zone = document.getElementById('proveTrackZone');
-  spawnSparkles(zone);
+  spawnSparkles(document.getElementById('comboLog'));
   document.getElementById('btnToScaleNext').disabled = false;
   showToast('🏆 Best combination found!');
 }
 
-makeDraggable(document.getElementById('paletteTryCombo'), ()=>{
-  if (comboFound || manualTries >= MANUAL_LIMIT) return;
-  manualTries++;
-  const combo = pickUntried();
-  triedMasks.add(combo.mask);
-  document.getElementById('comboCount').textContent = triedMasks.size;
-  const zone = document.getElementById('proveTrackZone');
-  const chip = document.createElement('div');
-  chip.className = 'track-chip';
-  chip.textContent = '🔍 Check #'+triedMasks.size;
-  zone.appendChild(chip);
-
-  if (!combo.valid){
-    logLine(`${nameCombo(combo.ids)} → risk ${combo.risk} — invalid, skipped.`, 'try');
-  } else if (combo.ret > bestSoFar.ret){
-    bestSoFar = combo;
-    logLine(`${nameCombo(combo.ids)} → return ${combo.ret} — better than yours! New best.`, 'better');
-  } else {
-    logLine(`${nameCombo(combo.ids)} → return ${combo.ret} — not as good as yours.`, 'try');
-  }
-
-  if (bestSoFar.ret === BEST_COMBO.ret){
-    comboFound = true;
-    logLine(`That's actually the best possible combination! ✅`, 'found');
-    celebrateWin();
+function renderJudgeCard(){
+  document.getElementById('judgeProgress').textContent = 'Judged: '+judgeIndex+' of '+JUDGE_LIMIT+' · Score: '+judgeScore;
+  if (judgeIndex >= JUDGE_LIMIT){
+    document.getElementById('judgeCard').style.display = 'none';
+    document.getElementById('btnRunFullSearch').disabled = false;
+    showToast('You judged '+judgeScore+'/'+JUDGE_LIMIT+' correctly. Now let\'s check ALL of them.');
     return;
   }
+  const c = judgeCandidates[judgeIndex];
+  document.getElementById('judgeNames').textContent = nameCombo(c.ids);
+  document.getElementById('judgeRisk').textContent = c.risk;
+  document.getElementById('judgeFeedback').style.display = 'none';
+  document.getElementById('btnJudgeValid').disabled = false;
+  document.getElementById('btnJudgeInvalid').disabled = false;
+}
+function judge(guessValid){
+  const c = judgeCandidates[judgeIndex];
+  const correct = guessValid === c.valid;
+  if (correct) judgeScore++;
+  document.getElementById('btnJudgeValid').disabled = true;
+  document.getElementById('btnJudgeInvalid').disabled = true;
+  const fb = document.getElementById('judgeFeedback');
+  fb.style.display = 'block';
+  fb.textContent = (correct ? '✅ Right — ' : '❌ Not quite — ') +
+    `risk ${c.risk} is ${c.valid ? 'AT OR UNDER' : 'OVER'} the limit of 10, so it's ${c.valid?'valid':'invalid'}.` +
+    (c.valid && c.ret > bestSoFar.ret ? ` And it scores ${c.ret} return — better than your portfolio!` : '');
+  if (c.valid && c.ret > bestSoFar.ret) bestSoFar = c;
+  judgeIndex++;
+  setTimeout(renderJudgeCard, 1400);
+}
+document.getElementById('btnJudgeValid').addEventListener('click', ()=> judge(true));
+document.getElementById('btnJudgeInvalid').addEventListener('click', ()=> judge(false));
 
-  if (manualTries >= MANUAL_LIMIT){
-    const loopBlock = document.getElementById('paletteCheckAll');
-    loopBlock.classList.remove('locked');
-    document.getElementById('checkAllSub').textContent = 'drag me — automate the rest';
-    showToast('Only checked '+triedMasks.size+' of 64 — imagine doing all of them by hand.');
-  }
-}, document.getElementById('proveTrackZone'));
-
-makeDraggable(document.getElementById('paletteCheckAll'), ()=>{
-  if (comboRunning || comboFound || manualTries < MANUAL_LIMIT) return;
+document.getElementById('btnRunFullSearch').addEventListener('click', ()=>{
+  if (comboRunning || comboFound) return;
   comboRunning = true;
-  const zone = document.getElementById('proveTrackZone');
-  const chip = document.createElement('div');
-  chip.className = 'track-chip';
-  chip.textContent = '🔁 Check Every Combination';
-  zone.appendChild(chip);
-
-  const remaining = ALL_COMBOS.filter(c=>!triedMasks.has(c.mask));
+  document.getElementById('btnRunFullSearch').disabled = true;
+  const judgedMasks = new Set(judgeCandidates.map(c=>c.mask));
+  judgedMasks.add(bestSoFar.mask);
+  const remaining = ALL_COMBOS.filter(c=>!judgedMasks.has(c.mask));
   let i = 0;
   function step(){
     if (i >= remaining.length){
       comboFound = true; comboRunning = false;
-      logLine(`Checked all 64. Best possible: ${nameCombo(BEST_COMBO.ids)} → return ${BEST_COMBO.ret} ✅`, 'found');
+      logLine(`Checked all 63. Best possible: ${nameCombo(BEST_COMBO.ids)} → return ${BEST_COMBO.ret} ✅`, 'found');
       celebrateWin();
       return;
     }
     const combo = remaining[i];
-    triedMasks.add(combo.mask);
-    document.getElementById('comboCount').textContent = triedMasks.size;
     if (combo.valid && combo.ret > bestSoFar.ret){
       bestSoFar = combo;
       logLine(`${nameCombo(combo.ids)} → return ${combo.ret} — new best!`, 'better');
     }
     i++;
-    setTimeout(step, 35);
+    setTimeout(step, 25);
   }
   step();
-}, document.getElementById('proveTrackZone'));
+});
 
 document.getElementById('btnToScaleNext').addEventListener('click', ()=>{ unlockNext('prove'); goToStage('scale'); });
 
 /* ================= STEP 3: SCALE + QUANTUM ================= */
-const THROUGHPUT = 1e9;
+const THROUGHPUT = 1e7; // 10 million valid-portfolio checks/sec — realistic for constraint-checked combinations, not raw arithmetic
 function formatDuration(sec){
   const universeAge = 31557600*13.8e9;
   if (sec < 1) return 'under a second';
@@ -676,24 +767,100 @@ function renderScale(){
   document.getElementById('comboTotal').textContent = combos >= 1e15 ? combos.toExponential(2) : Math.round(combos).toLocaleString();
   const classicalSec = combos/THROUGHPUT;
   const quantumSec = Math.sqrt(combos)/THROUGHPUT;
-  const cText = formatDuration(classicalSec);
-  document.getElementById('classicalTime').textContent = cText;
-  document.getElementById('classicalTime2').textContent = cText;
+  document.getElementById('classicalTime').textContent = formatDuration(classicalSec);
   document.getElementById('quantumTime').textContent = formatDuration(quantumSec);
   let msg;
-  if (n<=14) msg = "At this size, both a normal and a quantum computer finish instantly. The difference doesn't matter yet.";
-  else if (n<=22) msg = "A normal computer is starting to work for it — a quantum computer barely notices.";
-  else msg = "This is roughly the scale of a real institutional portfolio. Classical brute force is now genuinely painful; quantum search stays comfortable.";
+  if (classicalSec < 1) msg = "At this size, both a normal and a quantum computer finish instantly. The difference doesn't matter yet.";
+  else if (classicalSec < 3600) msg = "A normal computer is starting to work for it — a quantum computer barely notices.";
+  else if (classicalSec < 31557600*5) msg = "This is roughly the scale of a real institutional portfolio. Classical brute force is now genuinely painful; quantum search stays comfortable.";
+  else msg = "Now it's not painful, it's impossible — no classical computer will ever finish this in a human lifetime. Quantum search still handles it comfortably.";
   document.getElementById('scaleMessage').textContent = msg;
 }
 document.getElementById('optSlider').addEventListener('input', renderScale);
-document.getElementById('infoToggleQuantum').addEventListener('click', (e)=>{
-  document.getElementById('quantumReveal').style.display = 'block';
-  e.target.style.display = 'none';
-  renderScale();
-});
 renderScale();
-document.getElementById('btnToPlenary').addEventListener('click', ()=>{ unlockNext('scale'); goToStage('plenary'); });
+document.getElementById('btnToQSearch').addEventListener('click', ()=>{ unlockNext('scale'); goToStage('qsearch'); resetQSearch(); });
+
+/* ================= STEP 4: BUILD THE QUANTUM SEARCH (real Grover on their own 63 combos) ================= */
+const QS_N = 64; // indices 0-63, mask 0 (empty) never marked/targeted
+const QS_THETA = Math.asin(1/Math.sqrt(QS_N));
+let qsBlocks = [];
+let qsBlockUid = 0;
+
+function resetQSearch(){
+  qsBlocks = [];
+  document.getElementById('qsResult').textContent = '—';
+  document.getElementById('btnToPlenary').disabled = true;
+  renderQSTrack();
+  renderQSGauge();
+}
+function qsIterations(){
+  const marks = qsBlocks.filter(b=>b.type==='mark').length;
+  const boosts = qsBlocks.filter(b=>b.type==='boost').length;
+  return Math.min(marks, boosts);
+}
+function qsConfidence(){
+  const k = qsIterations();
+  return Math.pow(Math.sin((2*k+1)*QS_THETA), 2);
+}
+function renderQSTrack(){
+  const zone = document.getElementById('qsTrackZone');
+  zone.querySelectorAll('.track-chip:not(.fixed)').forEach(el=>el.remove());
+  qsBlocks.forEach(b=>{
+    const chip = document.createElement('div');
+    chip.className = 'track-chip' + (b.type==='mark' ? '' : ' loop');
+    chip.innerHTML = (b.type==='mark' ? '🎯 Mark' : '📈 Boost') + ' ✕';
+    chip.addEventListener('click', ()=>{
+      qsBlocks = qsBlocks.filter(x=>x.id!==b.id);
+      renderQSTrack(); renderQSGauge();
+    });
+    zone.appendChild(chip);
+  });
+}
+function renderQSGauge(){
+  const k = qsIterations();
+  const conf = qsConfidence();
+  const pct = conf*100;
+  document.getElementById('qsGaugeVal').textContent = pct.toFixed(1)+'%';
+  const fill = document.getElementById('qsGaugeFill');
+  fill.style.width = pct+'%';
+  fill.style.background = pct>=70 ? 'var(--good)' : (pct>=35 ? 'var(--one)' : 'var(--limit)');
+  document.getElementById('qsGaugeHint').textContent = k===0 ? 'No Search Steps yet — a blind guess out of 63.' : (k===6 ? 'Sweet spot for 63 combinations. 🎯' : (k>6 ? 'Overshot — confidence dropped.' : 'Getting stronger — 63 combinations need more steps than 8 did.'));
+  renderQSCode();
+}
+function renderQSCode(){
+  const lines = [
+    '<span class="cd">qc = QuantumCircuit(6)  # 6 qubits = 64 combinations</span>',
+    '<span class="cd">qc.h(range(6))  # superposition: all 63 at once</span>'
+  ];
+  let stepNum=1, open=false;
+  qsBlocks.forEach(b=>{
+    if (b.type==='mark'){ if(!open){ lines.push('<span class="cm"># Search Step '+stepNum+'</span>'); open=true; } lines.push('<span class="cd">qc.append(oracle(best_portfolio), range(6))   # Mark</span>'); }
+    else { lines.push('<span class="cd">qc.append(diffuser(), range(6))               # Boost</span>'); if(open){ open=false; stepNum++; } }
+  });
+  lines.push('<span class="ch">qc.measure_all()</span>');
+  document.getElementById('qsCodeOutput').innerHTML = lines.join('\n');
+}
+makeDraggable(document.getElementById('qsPaletteMark'), ()=>{
+  qsBlocks.push({type:'mark', id:'s'+(qsBlockUid++)});
+  renderQSTrack(); renderQSGauge();
+}, document.getElementById('qsTrackZone'));
+makeDraggable(document.getElementById('qsPaletteBoost'), ()=>{
+  qsBlocks.push({type:'boost', id:'s'+(qsBlockUid++)});
+  renderQSTrack(); renderQSGauge();
+}, document.getElementById('qsTrackZone'));
+
+document.getElementById('qsMeasureBtn').addEventListener('click', ()=>{
+  const conf = qsConfidence();
+  const success = Math.random() < conf;
+  document.getElementById('qsResult').textContent = success
+    ? `Found it! ${nameCombo(BEST_COMBO.ids)} → return ${BEST_COMBO.ret}, in ONE guess (${(conf*100).toFixed(1)}% confidence).`
+    : `Missed this time (${(conf*100).toFixed(1)}% confidence) — try adjusting your program.`;
+  if (success) spawnSparkles(document.getElementById('qsResult'));
+  document.getElementById('btnToPlenary').disabled = false;
+  showToast(success ? '🏆 Found the true best with real quantum code!' : 'Not this time — try again.');
+});
+
+document.getElementById('btnToPlenary').addEventListener('click', ()=>{ unlockNext('qsearch'); goToStage('plenary'); });
 
 /* ================= PLENARY ================= */
 const QUIZ = [
@@ -755,17 +922,43 @@ document.getElementById('codenameInput').value = randomCodename();
 document.getElementById('btnRandomName').addEventListener('click', ()=>{
   document.getElementById('codenameInput').value = randomCodename();
 });
-function renderPlenary(){ renderFieldTest(); }
+function renderPlenary(){ renderFieldTest(); renderLeaderboard(); }
+
+function renderLeaderboard(){
+  const validSorted = ALL_COMBOS.filter(c=>c.valid).sort((a,b)=>b.ret-a.ret);
+  const rivals = [];
+  const seenRet = new Set([bestSoFar.ret]);
+  for (const c of validSorted){
+    if (rivals.length >= 3) break;
+    if (seenRet.has(c.ret)) continue;
+    seenRet.add(c.ret);
+    rivals.push(c);
+  }
+  const rivalNames = ['Rival Manager A','Rival Manager B','Rival Manager C'];
+  const entries = [
+    { name:'You', ret: bestSoFar.ret, isYou:true },
+    ...rivals.map((c,i)=>({ name: rivalNames[i], ret: c.ret, isYou:false }))
+  ];
+  entries.sort((a,b)=>b.ret-a.ret);
+  const el = document.getElementById('leaderboard');
+  el.innerHTML = '';
+  entries.forEach((e,i)=>{
+    const row = document.createElement('div');
+    row.className = 'lb-row' + (e.isYou ? ' you' : '');
+    row.innerHTML = '<div class="lb-rank">#'+(i+1)+'</div><div class="lb-name">'+e.name+(e.isYou?' (you)':'')+'</div><div class="lb-score mono">'+e.ret+' return</div>';
+    el.appendChild(row);
+  });
+}
 document.getElementById('btnCopyAgentCard').addEventListener('click', async ()=>{
   const name = document.getElementById('codenameInput').value || 'Portfolio Manager';
   const lines = [
     `📊 PORTFOLIO MANAGER ${name.toUpperCase()} — MISSION COMPLETE`, '',
     `▸ Built a portfolio scoring ${computeTotals(portfolio).ret} return under a risk limit of ${RISK_LIMIT}`,
-    `▸ Proved the best possible combination scores ${BEST_COMBO.ret} return — checked all 64 combinations`,
-    `▸ Saw why adding investment options doubles the search space every time`,
+    `▸ Proved the best possible combination scores ${BEST_COMBO.ret} return — checked all 63 combinations`,
+    `▸ Built and ran an actual quantum program (Grover's algorithm) that found it in one guess`,
   ];
   if (quizAnswered === QUIZ.length) lines.push(`▸ Field test: ${quizScore}/${QUIZ.length}`);
-  lines.push('', 'Real conditionals, real combinatorics — no trick.', 'I wrote real code today.');
+  lines.push('', 'Real conditionals, real combinatorics, real quantum code — no trick.', 'I wrote real code, and my first quantum program, today.');
   const txt = lines.join('\n');
   try{ await navigator.clipboard.writeText(txt); showToast('Copied! Go brag.'); }
   catch(e){ showToast('Select and copy manually.'); }

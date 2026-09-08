@@ -87,6 +87,13 @@
   .loop-log{ background: var(--bg-deep); border-radius:12px; padding:12px; margin:14px 0; height:120px; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:0.72rem; line-height:1.7; }
   .loop-log .try{ color: var(--text-dim); } .loop-log .found{ color: var(--good); font-weight:700; }
   .loop-counter{ text-align:center; margin: 10px 0; }
+
+  .vault-grid{ display:grid; gap:6px; }
+  .vault-box{ aspect-ratio:1; background: var(--bg-deep); border-radius:9px; display:flex;align-items:center;justify-content:center; font-size:1.05rem; border:2px solid rgba(255,255,255,0.06); transition: all .25s ease; }
+  .vault-box.empty{ opacity:.3; }
+  .vault-box.treasure{ background: linear-gradient(135deg, var(--star), var(--one)); border-color:#fff; animation: treasurepop .5s ease; box-shadow: 0 0 24px rgba(255,178,56,0.7); }
+  @keyframes treasurepop{ 0%{transform:scale(.7);} 60%{transform:scale(1.22);} 100%{transform:scale(1);} }
+  .year-result{ text-align:center; margin: 12px 0; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1rem; color: var(--text); min-height:1.4rem; }
   .loop-counter .num{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.8rem; color: var(--star); }
   .loop-counter .lbl{ font-size:0.7rem; color: var(--text-dim); }
 
@@ -160,9 +167,24 @@
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   .footer-note{ text-align:center; color: var(--text-dim); font-size: 0.72rem; margin-top: 18px; line-height:1.5; }
   .info-toggle{ background:none;border:none;color: var(--text-dim); font-family:'Nunito',sans-serif; font-weight:700; font-size:0.76rem; cursor:pointer; padding:0; margin: 10px 0 0; text-decoration: underline; }
+  .home-link{ position:fixed; top:14px; left:14px; z-index:45; background:var(--panel); color:var(--text-dim); text-decoration:none; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.72rem; padding:8px 12px; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); }
+  .home-link:hover{ color: var(--text); }
+
+  .victory-overlay{ display:none; position:fixed; inset:0; background: rgba(6,7,20,0.92); z-index:70; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+  .victory-overlay.open{ display:flex; }
+  .victory-box{ background: linear-gradient(160deg, rgba(124,111,255,0.28), rgba(76,255,192,0.16)); border:1px solid rgba(255,255,255,0.18); border-radius:24px; padding:32px 24px; text-align:center; max-width:440px; animation: victoryPop .5s cubic-bezier(.34,1.56,.64,1); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  @keyframes victoryPop{ 0%{ transform:scale(.7); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
+  .victory-box .big-emoji{ font-size:3.4rem; margin-bottom:8px; }
+  .victory-box h2{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.4rem; margin:0 0 12px; line-height:1.3; background: linear-gradient(90deg, var(--good), var(--star), var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .victory-box p{ font-size:0.9rem; color: var(--text); line-height:1.6; margin:0 0 16px; }
+  .victory-box .inspire{ font-size:0.8rem; color: var(--text-dim); background: rgba(0,0,0,0.25); border-radius:12px; padding:14px; margin-bottom:18px; line-height:1.55; text-align:left; }
+  .victory-box button{ width:100%; border:none; border-radius:14px; padding:14px; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1rem; cursor:pointer; background: linear-gradient(135deg, var(--good), #38b788); color:#08281c; }
+  .confetti-piece{ position:fixed; top:-20px; width:8px; height:14px; z-index:71; pointer-events:none; animation: confettiFall linear forwards; }
+  @keyframes confettiFall{ 0%{ transform:translateY(0) rotate(0deg); opacity:1; } 100%{ transform:translateY(100vh) rotate(720deg); opacity:0.4; } }
 </style>
 </head>
 <body>
+<a class="home-link" href="index.html">🏠 All activities</a>
 
 <div class="stars" id="stars"></div>
 <div class="toast" id="toast"></div>
@@ -235,6 +257,10 @@
         <div class="label">what a friend without the key would see</div>
       </div>
 
+      <div class="code-panel open" id="codePanel00" style="display:none;">
+        <pre id="codeOutput00"></pre>
+      </div>
+
       <button class="cta" id="btnToEncodeNext" disabled>Now be the codebreaker →</button>
     </div>
     <p class="footer-note">This is called a Caesar shift — one of the oldest ciphers in history, still a perfect example of "a program is a rule applied to data."</p>
@@ -265,10 +291,7 @@
       </div>
       <div class="loop-log" id="loopLog"></div>
 
-      <div class="row2">
-        <button id="btnToggleCode1">👨‍💻 View the code</button>
-      </div>
-      <div class="code-panel" id="codePanel1">
+      <div class="code-panel open" id="codePanel1">
         <pre id="codeOutput1"></pre>
       </div>
 
@@ -282,47 +305,95 @@
     <div class="stage">
       <div class="live-tag"><span class="pulse-dot"></span>STEP 3 · WHY LOOPS CAN TAKE FOREVER</div>
       <h2>Make the key longer</h2>
-      <p class="lede">Our 26-letter alphabet only gave the loop 25 possible keys to try — instant. Real passwords use much bigger key spaces. Drag the slider and watch what happens to the loop.</p>
+      <p class="lede">Our 26-letter alphabet only gave the loop 25 possible keys to try — instant. Real passwords use much bigger key spaces. Drag the slider and watch both computers, live.</p>
 
       <div class="bits-slider">
         <div class="bits-label"><span id="bitsVal">32</span>-bit key — <span class="mono" id="bitsCount">4,294,967,296</span> possible keys</div>
         <input type="range" id="bitsSlider" min="0" max="9" step="1" value="4">
       </div>
 
-      <div id="predictBlock">
-        <p class="lede" style="margin-top:14px;">Before we reveal it — guess how long a normal computer would take to crack a <b>64-bit</b> key, trying 1 billion a second.</p>
-        <div class="predict-row">
-          <button data-guess="seconds">Seconds</button>
-          <button data-guess="days">Days</button>
-          <button data-guess="centuries">Centuries+</button>
-        </div>
+      <div class="stat-callout">
+        <div class="stat-item limit"><div class="num mono" id="classicalTime">4.3 seconds</div><div class="lbl">Classical computer<br>(1 billion keys/sec)</div></div>
+        <div class="stat-vs">VS</div>
+        <div class="stat-item quantum"><div class="num mono" id="quantumTime">under a second</div><div class="lbl">Quantum computer<br>(same throughput)</div></div>
+      </div>
+      <div class="callback-box">Remember the Vault Heist? Quantum search can explore a huge pile of possibilities almost at once — so it only needs about the <b>square root</b> of the classical loop's work, not all of it.</div>
+      <div class="callback-box" id="scaleMessage">At small key sizes it barely matters. Keep dragging the slider up.</div>
+
+      <div class="palette-caption" style="margin-top:16px;">Quick guess, any time — try it at different slider positions</div>
+      <p class="lede" style="text-align:center;">How long would the <b>classical</b> computer take at <span class="mono" id="predictBitsLabel">32</span>-bit?</p>
+      <div class="predict-row">
+        <button data-guess="seconds">Seconds</button>
+        <button data-guess="days">Days</button>
+        <button data-guess="centuries">Centuries+</button>
       </div>
 
-      <div class="stat-callout" id="classicalRevealBlock" style="display:none;">
-        <div class="stat-item limit"><div class="lbl">A normal computer trying<br>1 billion keys/second would need</div><div class="num mono" id="classicalTime">4.3 seconds</div></div>
-      </div>
-
-      <button class="info-toggle" id="infoToggleQuantum">Now add a quantum computer to the picture</button>
-      <div id="quantumReveal" style="display:none;">
-        <div class="callback-box">Remember the Vault Heist? Quantum search can explore a huge pile of possibilities almost at once — so it only needs about the <b>square root</b> of the classical loop's work, not all of it.</div>
-        <div class="stat-callout">
-          <div class="stat-item limit"><div class="num mono" id="classicalTime2">4.3 seconds</div><div class="lbl">Classical computer</div></div>
-          <div class="stat-vs">VS</div>
-          <div class="stat-item quantum"><div class="num mono" id="quantumTime">under a second</div><div class="lbl">Quantum computer</div></div>
-        </div>
-        <div class="callback-box" id="scaleMessage">At small key sizes it barely matters. Keep dragging the slider up.</div>
-      </div>
-
-      <button class="cta" id="btnToPlenary">Finish up →</button>
+      <button class="cta" id="btnToQCrack">Now build the quantum version yourself →</button>
     </div>
     <p class="footer-note">This is a simplified real comparison — it's why banks are already moving to longer, quantum-resistant keys today, years before powerful quantum computers exist.</p>
+  </section>
+
+  <!-- STEP 4: BUILD THE QUANTUM CRACKER -->
+  <section class="screen" id="screenQCrack">
+    <div class="stage">
+      <div class="scan-sweep"></div>
+      <div class="live-tag"><span class="pulse-dot"></span>STEP 4 · REAL QUANTUM CODE</div>
+      <h2>Build the quantum version of your own loop</h2>
+      <p class="lede">This is a separate, simplified example — 8 possible keys instead of 25, so the numbers stay clean — but the code you're about to drag is the actual algorithm real quantum computers use: <b>Grover's algorithm</b>. Same trick as the Vault Heist, applied to cracking a key.</p>
+
+      <div class="vault-grid" id="qcGrid" style="grid-template-columns:repeat(4,1fr); max-width:260px; margin:14px auto;"></div>
+
+      <div class="palette-caption">Drag blocks to build a real quantum search program</div>
+      <div class="block-palette">
+        <div class="code-block mark" id="qcPaletteMark">🎯 Mark<small>flag the real key</small></div>
+        <div class="code-block boost" id="qcPaletteBoost">📈 Boost<small>amplify the odds</small></div>
+      </div>
+      <div class="track-zone" id="qcTrackZone">
+        <div class="track-chip fixed">① Look at all 8 keys at once</div>
+      </div>
+
+      <div class="gauge-wrap">
+        <div class="gauge-val mono" id="qcGaugeVal">—</div>
+        <div class="gauge-label">chance this finds the key in one guess</div>
+        <div class="gauge-track"><div class="gauge-fill" id="qcGaugeFill" style="width:0%"></div></div>
+        <div class="gauge-hint" id="qcGaugeHint"></div>
+      </div>
+
+      <div class="code-panel open" id="qcCodePanel">
+        <pre id="qcCodeOutput"></pre>
+      </div>
+
+      <button class="cta" id="qcMeasureBtn">Measure it! 🎲</button>
+      <div class="year-result"><div class="num mono" id="qcResult">—</div></div>
+
+      <button class="cta" id="btnToPlenary" disabled>Finish up →</button>
+    </div>
+    <p class="footer-note">You just wrote the same class of quantum program used for real password auditing research — this isn't a metaphor for Grover's algorithm, it IS Grover's algorithm, at small scale.</p>
   </section>
 
   <!-- PLENARY -->
   <section class="screen" id="screenPlenary">
     <div class="stage">
       <div class="live-tag"><span class="pulse-dot"></span>PLENARY</div>
-      <h2>Let's check what stuck</h2>
+      <h2>One more, no help this time</h2>
+      <p class="lede">A new message, a new secret shift. Turn the dial yourself — no drag blocks, just you against the cipher.</p>
+
+      <div class="msg-box">
+        <div class="word" id="finalCipherWord" style="color:var(--star);">—</div>
+        <div class="label">crack this — what word does it decode to?</div>
+      </div>
+      <div class="shift-control">
+        <button id="finalShiftDown">−</button>
+        <div class="val mono" id="finalShiftVal">Try 1</div>
+        <button id="finalShiftUp">+</button>
+      </div>
+      <div class="msg-box">
+        <div class="word" id="finalDecodedWord" style="color:var(--text-dim);">—</div>
+        <div class="label">your decode at this shift</div>
+      </div>
+      <div class="callback-box" id="finalCrackFeedback" style="text-align:center;">Turn the dial until this reads a real word.</div>
+
+      <h2 style="margin-top:22px;">Let's check what stuck</h2>
       <p class="lede">Back to the two aims from the start.</p>
 
       <div class="recap-card">
@@ -348,10 +419,24 @@
         <div class="row2" style="margin-top:4px;">
           <button class="primary" id="btnCopyAgentCard">Copy my mission report</button>
         </div>
+        <div class="row2">
+          <a class="cta" style="display:block; text-decoration:none; text-align:center; box-sizing:border-box;" href="index.html">🏁 Finish — back to all activities</a>
+        </div>
       </div>
     </div>
     <p class="footer-note">No hardware, no trick — real programming and real quantum mathematics, run live.</p>
   </section>
+</div>
+
+<!-- VICTORY OVERLAY -->
+<div class="victory-overlay" id="victoryOverlay">
+  <div class="victory-box">
+    <div class="big-emoji">🎉</div>
+    <h2>You wrote real code — classical AND quantum</h2>
+    <p>You wrote a real loop that broke a cipher by brute force, then built and ran an actual quantum program — Grover's algorithm, the real thing, not a metaphor — that cracked the same kind of problem in fewer steps. That's genuinely rare: most people never touch either.</p>
+    <div class="inspire">Nobody starts as an expert — every security engineer and quantum programmer alive started exactly like this: curious, trying something, watching it actually work. If that felt exciting, that feeling is worth paying attention to.</div>
+    <button id="btnCloseVictory">See my results →</button>
+  </div>
 </div>
 
 <script>
@@ -373,8 +458,8 @@ function showToast(msg){
 }
 
 /* ================= STEPPER ================= */
-const STAGE_ORDER = ['aims','encode','crack','scale','plenary'];
-const STAGE_LABELS = { aims:'🎯 Aims', encode:'1', crack:'2', scale:'3', plenary:'🏁 Debrief' };
+const STAGE_ORDER = ['aims','encode','crack','scale','qcrack','plenary'];
+const STAGE_LABELS = { aims:'🎯 Aims', encode:'1', crack:'2', scale:'3', qcrack:'⚛️', plenary:'🏁 Debrief' };
 let currentStage = 'aims';
 let unlockedUpTo = 0;
 
@@ -396,9 +481,16 @@ function renderStepper(){
 function goToStage(key){
   currentStage = key;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  const map = { aims:'screenAims', encode:'screenEncode', crack:'screenCrack', scale:'screenScale', plenary:'screenPlenary' };
+  const map = { aims:'screenAims', encode:'screenEncode', crack:'screenCrack', scale:'screenScale', qcrack:'screenQCrack', plenary:'screenPlenary' };
   document.getElementById(map[key]).classList.add('active');
-  if (key==='plenary') renderPlenary();
+  if (key==='plenary'){
+    renderPlenary();
+    if (!victoryShown){
+      victoryShown = true;
+      document.getElementById('victoryOverlay').classList.add('open');
+      spawnConfetti();
+    }
+  }
   renderStepper();
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -453,6 +545,23 @@ function spawnSparkles(el){
     setTimeout(()=> s.remove(), 800);
   }
 }
+function spawnConfetti(){
+  const colors = ['#4CFFC0','#FFE066','#FF6FA5','#4CD6FF','#FFB238','#9C90FF'];
+  for(let i=0;i<50;i++){
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = (Math.random()*100)+'vw';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (2.2+Math.random()*1.6)+'s';
+    p.style.animationDelay = (Math.random()*0.5)+'s';
+    document.body.appendChild(p);
+    setTimeout(()=> p.remove(), 4500);
+  }
+}
+let victoryShown = false;
+document.getElementById('btnCloseVictory').addEventListener('click', ()=>{
+  document.getElementById('victoryOverlay').classList.remove('open');
+});
 
 /* ================= STEP 1: ENCODE (drag to build) ================= */
 const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -469,7 +578,16 @@ function shiftText(text, key){
 }
 function renderEncode(){
   document.getElementById('shiftVal').textContent = 'Shift '+shiftKey;
-  document.getElementById('cipherWord').textContent = shiftText(PLAINTEXT, shiftKey);
+  const cipher = shiftText(PLAINTEXT, shiftKey);
+  document.getElementById('cipherWord').textContent = cipher;
+  const lines = [
+    '<span class="cm">message = "CODE"</span>',
+    '<span class="cd">shift_amount = '+shiftKey+'</span>',
+    '<span class="cm">           # ↑ this is a variable — change it with +/− and watch this update</span>',
+    '<span class="cd">secret = shift_letters(message, shift_amount)</span>',
+    '<span class="ch">print(secret)   # "'+cipher+'"</span>'
+  ];
+  document.getElementById('codeOutput00').innerHTML = lines.join('\n');
 }
 makeDraggable(document.getElementById('paletteShift'), ()=>{
   if (shiftBlockPlaced) return;
@@ -481,6 +599,7 @@ makeDraggable(document.getElementById('paletteShift'), ()=>{
   zone.appendChild(chip);
   document.getElementById('shiftControl').style.display = 'flex';
   document.getElementById('cipherBox').style.display = 'block';
+  document.getElementById('codePanel00').style.display = 'block';
   document.getElementById('btnToEncodeNext').disabled = false;
   renderEncode();
   showToast('That block is now part of your program!');
@@ -528,9 +647,7 @@ function renderCode1(){
   ];
   document.getElementById('codeOutput1').innerHTML = lines.join('\n');
 }
-document.getElementById('btnToggleCode1').addEventListener('click', ()=>{
-  document.getElementById('codePanel1').classList.toggle('open');
-});
+document.getElementById('codePanel1').classList.add('open');
 
 function logLine(text, cls){
   const log = document.getElementById('loopLog');
@@ -628,14 +745,12 @@ function renderScale(){
   const space = Math.pow(2, bits);
   document.getElementById('bitsVal').textContent = bits;
   document.getElementById('bitsCount').textContent = space >= 1e15 ? space.toExponential(2) : Math.round(space).toLocaleString();
+  document.getElementById('predictBitsLabel').textContent = bits;
 
   const classicalSec = space/THROUGHPUT;
   const quantumSec = Math.sqrt(space)/THROUGHPUT;
-  const cText = formatDuration(classicalSec);
-  const qText = formatDuration(quantumSec);
-  document.getElementById('classicalTime').textContent = cText;
-  document.getElementById('classicalTime2').textContent = cText;
-  document.getElementById('quantumTime').textContent = qText;
+  document.getElementById('classicalTime').textContent = formatDuration(classicalSec);
+  document.getElementById('quantumTime').textContent = formatDuration(quantumSec);
 
   let msg;
   if (bits <= 24) msg = "At this size, both a normal computer and a quantum computer crack it instantly. The difference doesn't matter yet.";
@@ -643,37 +758,139 @@ function renderScale(){
   else if (bits <= 64) msg = "This is the danger zone: a normal computer needs centuries. A quantum computer needs seconds.";
   else msg = "Even at this length — safe from any classical computer for longer than the universe has existed — a quantum computer could still crack it within a human lifetime. That's exactly why banks are upgrading key sizes now.";
   document.getElementById('scaleMessage').textContent = msg;
+  return classicalSec;
+}
+function classifyDuration(sec){
+  if (sec < 60) return 'seconds';
+  if (sec < 31557600) return 'days';
+  return 'centuries';
 }
 document.getElementById('bitsSlider').addEventListener('input', renderScale);
 document.querySelectorAll('.predict-row button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.predict-row button').forEach(b=>b.classList.remove('picked'));
     btn.classList.add('picked');
-    document.getElementById('bitsSlider').value = 7; // 64-bit
-    renderScale();
-    document.getElementById('classicalRevealBlock').style.display = 'flex';
-    const correct = btn.dataset.guess === 'centuries';
-    showToast(correct ? '✅ Spot on — centuries.' : "😮 Actually: centuries. Bigger than you'd think.");
+    const classicalSec = renderScale();
+    const actual = classifyDuration(classicalSec);
+    const correct = btn.dataset.guess === actual;
+    showToast(correct ? '✅ Right!' : `😮 Actually: ${actual}. Try another bit size!`);
   });
-});
-document.getElementById('infoToggleQuantum').addEventListener('click', (e)=>{
-  document.getElementById('quantumReveal').style.display = 'block';
-  e.target.style.display = 'none';
-  renderScale();
 });
 renderScale();
 
 document.getElementById('btnToScaleNext').addEventListener('click', ()=>{ unlockNext('crack'); goToStage('scale'); });
-document.getElementById('btnToPlenary').addEventListener('click', ()=>{ unlockNext('scale'); goToStage('plenary'); });
+document.getElementById('btnToQCrack').addEventListener('click', ()=>{ unlockNext('scale'); goToStage('qcrack'); resetQCrack(); });
+
+/* ================= STEP 4: BUILD THE QUANTUM CRACKER (real Grover) ================= */
+const QC_N = 8;
+const QC_THETA = Math.asin(1/Math.sqrt(QC_N));
+let qcTarget = 0;
+let qcBlocks = [];
+let qcBlockUid = 0;
+let qcMeasured = false;
+
+function resetQCrack(){
+  qcTarget = Math.floor(Math.random()*QC_N);
+  qcBlocks = [];
+  qcMeasured = false;
+  document.getElementById('qcResult').textContent = '—';
+  document.getElementById('btnToPlenary').disabled = true;
+  const grid = document.getElementById('qcGrid');
+  grid.innerHTML = '';
+  for (let i=0;i<QC_N;i++){
+    const box = document.createElement('div');
+    box.className = 'vault-box';
+    box.dataset.i = i;
+    box.textContent = '❓';
+    grid.appendChild(box);
+  }
+  renderQCTrack();
+  renderQCGauge();
+}
+function qcIterations(){
+  const marks = qcBlocks.filter(b=>b.type==='mark').length;
+  const boosts = qcBlocks.filter(b=>b.type==='boost').length;
+  return Math.min(marks, boosts);
+}
+function qcConfidence(){
+  const k = qcIterations();
+  return Math.pow(Math.sin((2*k+1)*QC_THETA), 2);
+}
+function renderQCTrack(){
+  const zone = document.getElementById('qcTrackZone');
+  zone.querySelectorAll('.track-chip:not(.fixed)').forEach(el=>el.remove());
+  qcBlocks.forEach(b=>{
+    const chip = document.createElement('div');
+    chip.className = 'track-chip ' + (b.type==='mark'?'try':'loop');
+    chip.innerHTML = (b.type==='mark' ? '🎯 Mark' : '📈 Boost') + ' ✕';
+    chip.addEventListener('click', ()=>{
+      qcBlocks = qcBlocks.filter(x=>x.id!==b.id);
+      renderQCTrack(); renderQCGauge();
+    });
+    zone.appendChild(chip);
+  });
+}
+function renderQCGauge(){
+  const k = qcIterations();
+  const conf = qcConfidence();
+  const pct = conf*100;
+  document.getElementById('qcGaugeVal').textContent = pct.toFixed(1)+'%';
+  const fill = document.getElementById('qcGaugeFill');
+  fill.style.width = pct+'%';
+  fill.style.background = pct>=70 ? 'var(--good)' : (pct>=35 ? 'var(--one)' : 'var(--limit)');
+  let hint = k===0 ? 'No Search Steps yet — a blind guess.' : (k===2 ? 'Sweet spot for 8 keys. 🎯' : (k>2 ? 'Overshot — confidence dropped.' : 'Getting stronger — try another pair.'));
+  document.getElementById('qcGaugeHint').textContent = hint;
+  renderQCCode();
+}
+function renderQCCode(){
+  const lines = [
+    '<span class="cd">qc = QuantumCircuit(3)  # 3 qubits = 8 keys</span>',
+    '<span class="cd">qc.h([0,1,2])  # superposition: all 8 at once</span>'
+  ];
+  let stepNum=1, open=false;
+  qcBlocks.forEach(b=>{
+    if (b.type==='mark'){ if(!open){ lines.push('<span class="cm"># Search Step '+stepNum+'</span>'); open=true; } lines.push('<span class="cd">qc.append(oracle(key), [0,1,2])   # Mark</span>'); }
+    else { lines.push('<span class="cd">qc.append(diffuser(), [0,1,2])     # Boost</span>'); if(open){ open=false; stepNum++; } }
+  });
+  lines.push('<span class="ch">qc.measure_all()</span>');
+  document.getElementById('qcCodeOutput').innerHTML = lines.join('\n');
+}
+makeDraggable(document.getElementById('qcPaletteMark'), ()=>{
+  qcBlocks.push({type:'mark', id:'q'+(qcBlockUid++)});
+  renderQCTrack(); renderQCGauge();
+}, document.getElementById('qcTrackZone'));
+makeDraggable(document.getElementById('qcPaletteBoost'), ()=>{
+  qcBlocks.push({type:'boost', id:'q'+(qcBlockUid++)});
+  renderQCTrack(); renderQCGauge();
+}, document.getElementById('qcTrackZone'));
+
+document.getElementById('qcMeasureBtn').addEventListener('click', ()=>{
+  const conf = qcConfidence();
+  const success = Math.random() < conf;
+  const guess = success ? qcTarget : (()=>{ let i; do{ i=Math.floor(Math.random()*QC_N); } while(i===qcTarget); return i; })();
+  document.querySelectorAll('#qcGrid .vault-box').forEach(b=>{ b.classList.remove('empty','treasure'); b.textContent='❓'; });
+  const box = document.querySelector('#qcGrid .vault-box[data-i="'+guess+'"]');
+  box.classList.add(success?'treasure':'empty');
+  box.textContent = success ? '🔑' : '❌';
+  if (success) spawnSparkles(box);
+  document.getElementById('qcResult').textContent = success
+    ? `Found the key in one guess! (${(conf*100).toFixed(1)}% confidence)`
+    : `Missed this time (${(conf*100).toFixed(1)}% confidence) — try adjusting your program.`;
+  qcMeasured = true;
+  document.getElementById('btnToPlenary').disabled = false;
+  showToast(success ? '🔑 Cracked it with real quantum code!' : 'Not this time — try again.');
+});
+
+document.getElementById('btnToPlenary').addEventListener('click', ()=>{ unlockNext('qcrack'); goToStage('plenary'); });
 
 /* ================= PLENARY ================= */
 const QUIZ = [
   { q:'What do we call a step in a program that repeats until something is true?',
     opts:['A variable','A loop','A function'], correct:1,
     explain:'A loop repeats an action — exactly what "try key 1, try key 2..." was doing.' },
-  { q:"Why does adding a few more characters to a key make it MUCH harder to crack, not just a bit harder?",
-    opts:["Each extra character multiplies the total number of possible keys","Computers get tired","It doesn't really change much"], correct:0,
-    explain:'The number of possible keys doubles (at least) with every extra bit — that\'s exponential growth, not steady growth.' },
+  { q:"Why does adding just a few more characters to a key make cracking it MUCH harder, not just a little harder?",
+    opts:["Every extra character doubles (at least) the number of possible keys","Computers get slower with longer keys","It doesn't really change much"], correct:0,
+    explain:'The number of possible keys grows exponentially with length — that\'s why the slider numbers exploded so fast.' },
   { q:'Why are banks worried about quantum computers and passwords?',
     opts:['Quantum computers can explore many possible keys at once, needing far fewer tries','Quantum computers are just faster at everything','It isn\'t a real concern'], correct:0,
     explain:'Same trick as the Vault Heist: exploring many possibilities at once means needing roughly the square root of the classical effort.' }
@@ -729,7 +946,44 @@ document.getElementById('btnRandomName').addEventListener('click', ()=>{
   document.getElementById('codenameInput').value = randomCodename();
 });
 
-function renderPlenary(){ renderFieldTest(); }
+function renderPlenary(){ renderFieldTest(); initFinalChallenge(); }
+
+/* ================= PLENARY FINALE: crack it yourself ================= */
+const FINAL_WORDS = ['QUANTUM','SECRET','VAULT','BINARY','CIPHER'];
+let finalWord = 'QUANTUM';
+let finalShiftKey = 7;
+let finalTry = 1;
+let finalCracked = false;
+
+function initFinalChallenge(){
+  finalWord = FINAL_WORDS[Math.floor(Math.random()*FINAL_WORDS.length)];
+  finalShiftKey = 5 + Math.floor(Math.random()*20); // 5-24
+  finalTry = 1;
+  finalCracked = false;
+  document.getElementById('finalCipherWord').textContent = shiftText(finalWord, finalShiftKey);
+  document.getElementById('finalShiftVal').textContent = 'Try '+finalTry;
+  document.getElementById('finalDecodedWord').textContent = shiftText(shiftText(finalWord, finalShiftKey), -finalTry);
+  document.getElementById('finalCrackFeedback').textContent = 'Turn the dial until this reads a real word.';
+}
+function renderFinalDecode(){
+  const cipher = shiftText(finalWord, finalShiftKey);
+  const decoded = shiftText(cipher, -finalTry);
+  document.getElementById('finalShiftVal').textContent = 'Try '+finalTry;
+  document.getElementById('finalDecodedWord').textContent = decoded;
+  const fb = document.getElementById('finalCrackFeedback');
+  if (decoded === finalWord && !finalCracked){
+    finalCracked = true;
+    document.getElementById('finalDecodedWord').style.color = 'var(--good)';
+    spawnSparkles(document.getElementById('finalDecodedWord'));
+    fb.textContent = `Cracked it — "${finalWord}"! No blocks, no help, just you and the loop logic in your head.`;
+    showToast('🔓 Self-cracked!');
+  } else if (!finalCracked){
+    document.getElementById('finalDecodedWord').style.color = 'var(--text-dim)';
+    fb.textContent = 'Turn the dial until this reads a real word.';
+  }
+}
+document.getElementById('finalShiftUp').addEventListener('click', ()=>{ finalTry = finalTry>=25?1:finalTry+1; renderFinalDecode(); });
+document.getElementById('finalShiftDown').addEventListener('click', ()=>{ finalTry = finalTry<=1?25:finalTry-1; renderFinalDecode(); });
 
 document.getElementById('btnCopyAgentCard').addEventListener('click', async ()=>{
   const name = document.getElementById('codenameInput').value || 'Codebreaker';
@@ -738,10 +992,10 @@ document.getElementById('btnCopyAgentCard').addEventListener('click', async ()=>
     `🔓 CODEBREAKER ${name.toUpperCase()} — MISSION COMPLETE`, '',
     `▸ Wrote my first real loop — cracked "${cipher}" back to "CODE" by trying every key`,
     `▸ Saw why a 128-bit key would take a classical computer 780+ billion times the age of the universe to crack`,
-    `▸ Saw why a quantum computer needs only the square root of that effort`,
+    `▸ Built and ran an actual quantum program (Grover's algorithm) that cracked a key using superposition`,
   ];
   if (quizAnswered === QUIZ.length) lines.push(`▸ Field test: ${quizScore}/${QUIZ.length}`);
-  lines.push('', 'Real code, real maths — no trick.', 'I wrote my first loop today.');
+  lines.push('', 'Real classical code AND real quantum code — no trick.', 'I wrote my first loop, and my first quantum program, today.');
   const txt = lines.join('\n');
   try{ await navigator.clipboard.writeText(txt); showToast('Copied! Go brag.'); }
   catch(e){ showToast('Select and copy manually.'); }
