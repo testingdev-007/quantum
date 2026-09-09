@@ -45,6 +45,15 @@
 
   .section-label{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.68rem; color: var(--text-dim); letter-spacing:1.5px; margin: 22px 4px 10px; }
 
+  .session-group{ background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 22px; padding: 14px; margin-bottom: 20px; }
+  .session-head{ padding: 4px 6px 14px; }
+  .session-head .tag-time{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.62rem; color: var(--good); background: rgba(76,255,192,0.12); border-radius:8px; padding:3px 9px; display:inline-block; margin-bottom:8px; letter-spacing:0.5px; }
+  .session-head h2{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.05rem; margin:0 0 4px; }
+  .session-head p{ font-size:0.8rem; color: var(--text-dim); margin:0; line-height:1.4; }
+  .session-group .card{ margin-bottom: 12px; }
+  .session-group .card:last-child{ margin-bottom: 0; }
+  .card-num{ position:absolute; top:14px; right:16px; font-family:'JetBrains Mono',monospace; font-weight:800; font-size:0.9rem; color: var(--text-dim); opacity:.5; }
+
   .card{ display:block; text-decoration:none; color:inherit; background: var(--panel); border-radius: 20px; padding: 20px; margin-bottom: 14px; position:relative; overflow:hidden; box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 14px 34px rgba(0,0,0,0.3); transition: transform .15s ease; border-top: 3px solid var(--accent-color, var(--accent)); }
   a.card:active{ transform: scale(0.98); }
   .card::before{ content:""; position:absolute; inset:0; background: radial-gradient(circle at 90% -20%, rgba(255,255,255,0.06), transparent 55%); pointer-events:none; }
@@ -72,72 +81,103 @@
   <header>
     <div class="hero-icon"><div class="hero-orb"></div><div class="hero-orb b"></div></div>
     <h1>Quantum Programming</h1>
-    <p>An intro to coding for complete beginners — told through real quantum computing and real finance examples. Pick an activity to start.</p>
+    <p>An intro to coding for complete beginners — told through real quantum computing, finance, and science examples. Pick an activity to start.</p>
   </header>
 
-  <div class="section-label">▸ LIVE NOW</div>
+  <div class="session-group">
+    <div class="session-head">
+      <span class="tag-time">⏱ SESSION 1 · ~45–60 MIN</span>
+      <h2>Learn the controls</h2>
+      <p>Do these three in order — each one teaches you to drag real quantum code, and the later ones lean on what you learn here.</p>
+    </div>
 
-  <a class="card" href="quantum-coin-lab.html" style="--accent-color:var(--accent-bright);">
-    <div class="card-top">
-      <div class="icon">🔓</div>
-      <div class="card-arrow">→</div>
-    </div>
-    <h3>The Vault Heist</h3>
-    <p>Drag real code blocks to build a quantum search program, crack a vault before a classical computer can, then prove entanglement beats classical logic itself.</p>
-    <div class="tags">
-      <span class="tag live">● LIVE</span>
-      <span class="tag prog">SEQUENCES</span>
-      <span class="tag quantum">GROVER'S ALGORITHM</span>
-      <span class="tag quantum">ENTANGLEMENT</span>
-    </div>
-  </a>
+    <a class="card" href="quantum-coin-lab.html" style="--accent-color:var(--accent-bright);">
+      <div class="card-num">①</div>
+      <div class="card-top">
+        <div class="icon">🔓</div>
+        <div class="card-arrow">→</div>
+      </div>
+      <h3>The Vault Heist</h3>
+      <p>Drag real code blocks to build a quantum search program, crack a vault before a classical computer can, then prove entanglement beats classical logic itself.</p>
+      <div class="tags">
+        <span class="tag live">● LIVE</span>
+        <span class="tag prog">SEQUENCES</span>
+        <span class="tag quantum">GROVER'S ALGORITHM</span>
+        <span class="tag quantum">ENTANGLEMENT</span>
+      </div>
+    </a>
 
-  <a class="card" href="cipher-room.html" style="--accent-color:var(--pink);">
-    <div class="card-top">
-      <div class="icon">🔐</div>
-      <div class="card-arrow">→</div>
-    </div>
-    <h3>The Cipher Room</h3>
-    <p>Manually crack a secret code by hand, then drag in a block that automates the whole boring process for you — and find out why quantum computers threaten every password on Earth.</p>
-    <div class="tags">
-      <span class="tag live">● LIVE</span>
-      <span class="tag prog">LOOPS</span>
-      <span class="tag quantum">QUANTUM SEARCH</span>
-      <span class="tag quantum">CRYPTOGRAPHY</span>
-    </div>
-  </a>
+    <a class="card" href="cipher-room.html" style="--accent-color:var(--pink);">
+      <div class="card-num">②</div>
+      <div class="card-top">
+        <div class="icon">🔐</div>
+        <div class="card-arrow">→</div>
+      </div>
+      <h3>The Cipher Room</h3>
+      <p>Manually crack a secret code by hand, then drag in a block that automates the whole boring process for you — and find out why quantum computers threaten every password on Earth.</p>
+      <div class="tags">
+        <span class="tag live">● LIVE</span>
+        <span class="tag prog">LOOPS</span>
+        <span class="tag quantum">QUANTUM SEARCH</span>
+        <span class="tag quantum">CRYPTOGRAPHY</span>
+      </div>
+    </a>
 
-  <div class="section-label">▸ LIVE NOW</div>
+    <a class="card" href="portfolio-puzzle.html" style="--accent-color:var(--one);">
+      <div class="card-num">③</div>
+      <div class="card-top">
+        <div class="icon">📊</div>
+        <div class="card-arrow">→</div>
+      </div>
+      <h3>The Investment Puzzle</h3>
+      <p>Build the best possible investment portfolio under real constraints, discover why checking every combination gets impossible fast, and see how quantum computers explore many combinations at once.</p>
+      <div class="tags">
+        <span class="tag live">● LIVE</span>
+        <span class="tag prog">CONDITIONALS</span>
+        <span class="tag quantum">OPTIMIZATION</span>
+      </div>
+    </a>
+  </div>
 
-  <a class="card" href="portfolio-puzzle.html" style="--accent-color:var(--one);">
-    <div class="card-top">
-      <div class="icon">📊</div>
-      <div class="card-arrow">→</div>
+  <div class="session-group">
+    <div class="session-head">
+      <span class="tag-time">⏱ SESSION 2 · ~30–45 MIN</span>
+      <h2>Go deeper</h2>
+      <p>Better once the drag mechanic already feels familiar — this pair asks you to trust it through a genuine surprise, then ends on the biggest idea in the series.</p>
     </div>
-    <h3>The Investment Puzzle</h3>
-    <p>Build the best possible investment portfolio under real constraints, discover why checking every combination gets impossible fast, and see how quantum computers explore many combinations at once.</p>
-    <div class="tags">
-      <span class="tag live">● LIVE</span>
-      <span class="tag prog">CONDITIONALS</span>
-      <span class="tag quantum">OPTIMIZATION</span>
-    </div>
-  </a>
 
-  <a class="card" href="simulation-room.html" style="--accent-color:var(--zero);">
-    <div class="card-top">
-      <div class="icon">🎲</div>
-      <div class="card-arrow">→</div>
-    </div>
-    <h3>The Simulation Room</h3>
-    <p>Simulate thousands of possible futures to predict financial risk, watch the law of large numbers make your answer more reliable, and see why quantum computers need far fewer simulations for the same confidence.</p>
-    <div class="tags">
-      <span class="tag live">● LIVE</span>
-      <span class="tag prog">RANDOMNESS &amp; LOOPS</span>
-      <span class="tag quantum">MONTE CARLO</span>
-    </div>
-  </a>
+    <a class="card" href="simulation-room.html" style="--accent-color:var(--zero);">
+      <div class="card-num">④</div>
+      <div class="card-top">
+        <div class="icon">🎲</div>
+        <div class="card-arrow">→</div>
+      </div>
+      <h3>The Simulation Room</h3>
+      <p>Simulate thousands of possible futures to predict financial risk, watch the law of large numbers make your answer more reliable, and see why quantum computers need far fewer simulations for the same confidence.</p>
+      <div class="tags">
+        <span class="tag live">● LIVE</span>
+        <span class="tag prog">RANDOMNESS &amp; LOOPS</span>
+        <span class="tag quantum">MONTE CARLO</span>
+      </div>
+    </a>
 
-  <p class="footer-note">Four activities, four programming fundamentals — sequences, loops, conditionals, and randomness — each taught through something genuinely exciting rather than a textbook example. No installation, no account, works on any shared machine.</p>
+    <a class="card" href="molecule-lab.html" style="--accent-color:var(--good);">
+      <div class="card-num">⑤</div>
+      <div class="card-top">
+        <div class="icon">🧬</div>
+        <div class="card-arrow">→</div>
+      </div>
+      <h3>The Molecule Lab</h3>
+      <p>Compose a molecule atom by atom, watch the classical memory needed to simulate it exactly explode past anything Earth could build, then use real quantum superposition to represent it directly — no explosion at all.</p>
+      <div class="tags">
+        <span class="tag live">● LIVE</span>
+        <span class="tag prog">COMPOSITION</span>
+        <span class="tag quantum">QUANTUM SIMULATION</span>
+      </div>
+    </a>
+  </div>
+
+  <p class="footer-note">Five activities, five programming fundamentals — sequences, loops, conditionals, randomness, and composition — each taught through something genuinely exciting rather than a textbook example. No installation, no account, works on any shared machine.</p>
 </div>
 
 <script>
